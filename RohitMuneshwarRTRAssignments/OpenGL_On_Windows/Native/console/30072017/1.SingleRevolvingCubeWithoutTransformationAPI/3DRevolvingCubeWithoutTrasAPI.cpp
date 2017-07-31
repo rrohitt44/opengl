@@ -2,10 +2,11 @@
 #include<Windows.h>
 #include<gl/GL.h>
 #include<gl/GLU.h>
-
+//#define USE_MATH_DEFINES 1
+#include<math.h>
 #define WIN_WIDTH 800
 #define WIN_HEIGHT 600
-
+#define M_PI 3.1415
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
 
@@ -22,8 +23,15 @@ bool gbEscapePressed = false;
 HDC ghdc = NULL;
 HGLRC ghrc = NULL;
 
-GLfloat gfAnglePira = 0.0f;
-GLfloat gfAngleCube = 0.0f;
+GLfloat gfAngle_degree = 0.0f;
+GLfloat gfAngle_radian = 0.0f;
+//needed for transformation without using transformation APIs
+GLfloat identityMatrix[16];
+GLfloat translationMatrix[16];
+GLfloat scaleMatrix[16];
+GLfloat x_rotationMatrix[16];
+GLfloat y_rotationMatrix[16];
+GLfloat z_rotationMatrix[16];
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
 	void initialize(void);
@@ -114,14 +122,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 }
 
 void updateAngle(){
-	gfAnglePira = gfAnglePira + 0.1f;
-	if(gfAnglePira>=360.0f){
-		gfAnglePira = 0.0f;
-	}
-	
-	gfAngleCube = gfAngleCube + 0.1f;
-	if(gfAngleCube>=360.0f){
-		gfAngleCube = 0.0f;
+	gfAngle_degree = gfAngle_degree + 0.1f;
+	if(gfAngle_degree>=360.0f){
+		gfAngle_degree = 0.0f;
 	}
 }
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
@@ -261,7 +264,57 @@ void initialize(){
 	glClearDepth(1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
-	
+	//initialization of identityMatrix
+	identityMatrix[0]=1.0f;
+	identityMatrix[1]=0.0f;
+	identityMatrix[2]=0.0f;
+	identityMatrix[3]=0.0f;
+	identityMatrix[4]=0.0f;
+	identityMatrix[5]=1.0f;
+	identityMatrix[6]=0.0f;
+	identityMatrix[7]=0.0f;
+	identityMatrix[8]=0.0f;
+	identityMatrix[9]=0.0f;
+	identityMatrix[10]=1.0f;
+	identityMatrix[11]=0.0f;
+	identityMatrix[12]=0.0f;
+	identityMatrix[13]=0.0f;
+	identityMatrix[14]=0.0f;
+	identityMatrix[15]=1.0f;
+	//initialization of translationMatrix
+	translationMatrix[0]=1.0f;
+	translationMatrix[1]=0.0f;
+	translationMatrix[2]=0.0f;
+	translationMatrix[3]=0.0f;
+	translationMatrix[4]=0.0f;
+	translationMatrix[5]=1.0f;
+	translationMatrix[6]=0.0f;
+	translationMatrix[7]=0.0f;
+	translationMatrix[8]=0.0f;
+	translationMatrix[9]=0.0f;
+	translationMatrix[10]=1.0f;
+	translationMatrix[11]=0.0f;
+	translationMatrix[12]=0.0f;//tx
+	translationMatrix[13]=0.0f;//ty
+	translationMatrix[14]=-6.0f;//tz
+	translationMatrix[15]=1.0f;
+	//initialization of scaleMatrix
+	scaleMatrix[0]=0.75f;//sx
+	scaleMatrix[1]=0.0f;
+	scaleMatrix[2]=0.0f;
+	scaleMatrix[3]=0.0f;
+	scaleMatrix[4]=0.0f;
+	scaleMatrix[5]=0.75f;//sy
+	scaleMatrix[6]=0.0f;
+	scaleMatrix[7]=0.0f;
+	scaleMatrix[8]=0.0f;
+	scaleMatrix[9]=0.0f;
+	scaleMatrix[10]=0.75f;//sz
+	scaleMatrix[11]=0.0f;
+	scaleMatrix[12]=0.0f;
+	scaleMatrix[13]=0.0f;
+	scaleMatrix[14]=0.0f;
+	scaleMatrix[15]=1.0f;
 	//added for 3D support but are optional
 	//glShadeModel(GL_SMOOTH);
 	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
@@ -270,59 +323,77 @@ void initialize(){
 }
 
 void display(){
-	void DrawPyramid(void);
 	void DrawCube(void);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //GL_DEPTH_BUFFER_BIT added for 3D support
 	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(-1.5f,0.0f,-6.0f);
-	glRotatef(gfAnglePira, 0.0f,1.0f,0.0f);
-	DrawPyramid();
+	//glLoadIdentity();
+	glLoadMatrixf(identityMatrix);
+	//glTranslatef(0.0f,0.0f,-6.0f);
+	glMultMatrixf(translationMatrix);
+	//glScalef(0.75f,0.75f,0.75f);
+	glMultMatrixf(scaleMatrix);
+	//glRotatef(gfAngleCube, 1.0f,0.0f,0.0f);
+	//glRotatef(gfAngleCube, 0.0f,1.0f,0.0f);
+	//glRotatef(gfAngleCube, 0.0f,0.0f,1.0f);
 	
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(1.5f,0.0f,-6.0f);
-	//glScalef(0.0f,0.0f,0.0f);
-	glRotatef(gfAngleCube, 1.0f,1.0f,1.0f);
+	//convert to radian
+	gfAngle_radian = gfAngle_degree * (M_PI/180.0f);
+	//initialization of x_rotationMatrix
+	x_rotationMatrix[0]=1.0f;
+	x_rotationMatrix[1]=0.0f;
+	x_rotationMatrix[2]=0.0f;
+	x_rotationMatrix[3]=0.0f;
+	x_rotationMatrix[4]=0.0f;
+	x_rotationMatrix[5]=cos(gfAngle_radian);
+	x_rotationMatrix[6]=sin(gfAngle_radian);
+	x_rotationMatrix[7]=0.0f;
+	x_rotationMatrix[8]=0.0f;
+	x_rotationMatrix[9]=-sin(gfAngle_radian);
+	x_rotationMatrix[10]=cos(gfAngle_radian);
+	x_rotationMatrix[11]=0.0f;
+	x_rotationMatrix[12]=0.0f;
+	x_rotationMatrix[13]=0.0f;
+	x_rotationMatrix[14]=0.0f;
+	x_rotationMatrix[15]=1.0f;
+	glMultMatrixf(x_rotationMatrix);
+	//initialization of y_rotationMatrix
+	y_rotationMatrix[0]=cos(gfAngle_radian);
+	y_rotationMatrix[1]=0.0f;
+	y_rotationMatrix[2]=-sin(gfAngle_radian);
+	y_rotationMatrix[3]=0.0f;
+	y_rotationMatrix[4]=0.0f;
+	y_rotationMatrix[5]=1.0f;
+	y_rotationMatrix[6]=0.0f;
+	y_rotationMatrix[7]=0.0f;
+	y_rotationMatrix[8]=sin(gfAngle_radian);
+	y_rotationMatrix[9]=0.0f;
+	y_rotationMatrix[10]=cos(gfAngle_radian);
+	y_rotationMatrix[11]=0.0f;
+	y_rotationMatrix[12]=0.0f;
+	y_rotationMatrix[13]=0.0f;
+	y_rotationMatrix[14]=0.0f;
+	y_rotationMatrix[15]=1.0f;
+	glMultMatrixf(y_rotationMatrix);
+	//initialization of z_rotationMatrix
+	z_rotationMatrix[0]=cos(gfAngle_radian);
+	z_rotationMatrix[1]=sin(gfAngle_radian);
+	z_rotationMatrix[2]=0.0f;
+	z_rotationMatrix[3]=0.0f;
+	z_rotationMatrix[4]=-sin(gfAngle_radian);
+	z_rotationMatrix[5]=cos(gfAngle_radian);
+	z_rotationMatrix[6]=0.0f;
+	z_rotationMatrix[7]=0.0f;
+	z_rotationMatrix[8]=0.0f;
+	z_rotationMatrix[9]=0.0f;
+	z_rotationMatrix[10]=1.0f;
+	z_rotationMatrix[11]=0.0f;
+	z_rotationMatrix[12]=0.0f;
+	z_rotationMatrix[13]=0.0f;
+	z_rotationMatrix[14]=0.0f;
+	z_rotationMatrix[15]=1.0f;
+	glMultMatrixf(z_rotationMatrix);
 	DrawCube();
 	SwapBuffers(ghdc);
-}
-
-void DrawPyramid(){
-	glBegin(GL_TRIANGLES);
-	
-	//front
-	glColor3f(1.0f,0.0f,0.0f); //red
-	glVertex3f(0.0f,1.0f,0.0f); //appex
-	glColor3f(0.0f,1.0f,0.0f); //green
-	glVertex3f(-1.0f,-1.0f,1.0f);
-	glColor3f(0.0f,0.0f,1.0f); //blue
-	glVertex3f(1.0f,-1.0f,1.0f);
-	
-	//right
-	glColor3f(1.0f,0.0f,0.0f); //red
-	glVertex3f(0.0f,1.0f,0.0f); //appex
-	glColor3f(0.0f,0.0f,1.0f); //blue
-	glVertex3f(1.0f,-1.0f,1.0f);
-	glColor3f(0.0f,1.0f,0.0f); //green
-	glVertex3f(1.0f,-1.0f,-1.0f);
-	
-	//back
-	glColor3f(1.0f,0.0f,0.0f); //red
-	glVertex3f(0.0f,1.0f,0.0f); //appex
-	glColor3f(0.0f,1.0f,0.0f); //green
-	glVertex3f(1.0f,-1.0f,-1.0f);
-	glColor3f(0.0f,0.0f,1.0f); //blue
-	glVertex3f(-1.0f,-1.0f,-1.0f);
-	
-	//left
-	glColor3f(1.0f,0.0f,0.0f); //red
-	glVertex3f(0.0f,1.0f,0.0f); //appex
-	glColor3f(0.0f,0.0f,1.0f); //blue
-	glVertex3f(-1.0f,-1.0f,-1.0f);
-	glColor3f(0.0f,1.0f,0.0f); //green
-	glVertex3f(-1.0f,-1.0f,1.0f);
-	glEnd();
 }
 
 void DrawCube(){

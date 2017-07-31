@@ -269,7 +269,9 @@ void display(){
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glTranslatef(0.0f,0.0f,-4.0f);
-	glRotatef(gfAngleCube, 1.0f,1.0f,1.0f);
+	glRotatef(gfAngleCube, 1.0f,0.0f,0.0f);
+	glRotatef(gfAngleCube, 0.0f,1.0f,0.0f);
+	glRotatef(gfAngleCube, 0.0f,0.0f,1.0f);
 	DrawCube();
 	SwapBuffers(ghdc);
 }
