@@ -2,7 +2,7 @@
 #include<Windows.h>
 #include<gl/GL.h>
 #include<gl/GLU.h>
-#include<math.h>
+
 #define WIN_WIDTH 800
 #define WIN_HEIGHT 600
 
@@ -23,7 +23,11 @@ HDC ghdc = NULL;
 HGLRC ghrc = NULL;
 
 GLfloat gfAnglePira = 0.0f;
-GLfloat PI = 3.1415f;
+
+//solar system
+static int shoulder = 0;
+static int elbow = 0;
+GLUquadric *quadric = NULL;
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
 	void initialize(void);
 	void uninitialize(void);
@@ -31,7 +35,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	void updateAngle(void);
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("My First 3D Program");
+	TCHAR WinName[] = TEXT("3D Pyramid");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
@@ -102,7 +106,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 				if(gbEscapePressed == true){
 					gbDone = true;
 				}
-				//updateAngle();
+				updateAngle();
 				display(); //for double buffer
 			}
 		}
@@ -150,6 +154,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
 		break;*/ //removed as not needed for double buffering
 		case WM_KEYDOWN:
 			switch(wParam){
+				case 'e':
+					elbow = (elbow + 6) %360;
+				break;
+				case 'E':
+					elbow = (elbow - 6) %360;
+				break;
+				
+				case 's':
+					shoulder = (shoulder + 3) % 360;
+				break;
+				case 'S':
+					shoulder = (shoulder - 3) % 360;
+				break;
 				case VK_ESCAPE:
 					gbEscapePressed = true;
 					break;
@@ -264,112 +281,40 @@ void initialize(){
 }
 
 void display(){
-	void DrawCaptainAmerica(void);
-	void DrawHVLine(void);
-	void DrawPoints(void);
-	void DrawSinglePoint(void);
+	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //GL_DEPTH_BUFFER_BIT added for 3D support
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(0.0f,0.0f,-4.0f);
-	//glRotatef(gfAnglePira, 0.0f,1.0f,0.0f);
-	//DrawHVLine();
-	DrawCaptainAmerica();
-	//DrawSinglePoint();
-	//DrawPoints();
+	
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glTranslatef(0.0f,0.0f,-12.0f);
+	glPushMatrix();
+	
+	glRotatef((GLfloat) shoulder, 0.0f,0.0f,1.0f);
+	glTranslatef(1.0f,0.0f,0.0f);
+	glPushMatrix();
+	glScalef(2.0f,0.5f,1.0f);
+	quadric = gluNewQuadric();
+	glColor3f(0.5f,0.35f,0.05f);
+	gluSphere(quadric, 0.5f,10,10);
+	glPopMatrix();
+	
+	glTranslatef(1.0f,0.0f,0.0f);
+	glRotatef((GLfloat) elbow, 0.0f,0.0f,1.0f);
+	glTranslatef(1.0f,0.0f,0.0f);
+	glPushMatrix();
+	
+	glScalef(2.0f,0.5f,1.0f);
+	quadric = gluNewQuadric();
+	glColor3f(0.5f,0.35f,0.05f);
+	gluSphere(quadric, 0.5f,10,10);
+	glPopMatrix();
+	
+	glPopMatrix();
 	SwapBuffers(ghdc);
 }
 
-void DrawCaptainAmerica(){
-	GLfloat angleOuter = 0.0f;
-	GLfloat angleInner = 0.6283f;
-	GLfloat multiplier = 0.5f;
-	glColor3f(1.0f,0.0f,0.0f);
-	glPointSize(13.0f);
-	glBegin(GL_POINTS);
-	//for(float inc = 1.0f;inc>0.6f;inc = inc-0.2f){
-	float inc = 1.0f;
-	for(float angle=0.0f;angle<(2.0f*PI); angle = angle + 0.01f){
-		glVertex3f(cos(angle)*inc,sin(angle)*inc,0.0f);
-	}
-	glEnd();
-	
-	glColor3f(0.0f,0.0f,1.0f);
-	glBegin(GL_TRIANGLE_FAN);
-	inc = inc - 0.2f;
-	for(float angle=0.0f;angle<(2.0f*PI); angle = angle + 0.01f){
-		glVertex3f(cos(angle)*inc,sin(angle)*inc,0.0f);
-	}
-	//}
-	glEnd();
-	
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(0.0f,0.0f,-5.4f);
-	glRotatef(18.5f, 0.0f,0.0f,1.0f);
-	glColor3f(1.0f,1.0f,1.0f);
-	glPointSize(1.0f);
-	glBegin(GL_LINE_LOOP);
-	/*for(float inc = 1.0f;inc>0.6f;inc = inc-0.1f){
-	for(float angle=0.0f;angle<(2.0f*PI); angle = angle + 0.01f){
-		glVertex3f(cos(angle)*inc,sin(angle)*inc,0.0f);
-	}
-	}*/
-	for(;angleOuter<=5.0264f && angleInner<=5.6547f;){
-		glVertex3f(cos(angleOuter),sin(angleOuter),0.0f);
-		glVertex3f(cos(angleInner)*multiplier,sin(angleInner)*multiplier,0.0f);
-		angleOuter = angleOuter + 1.2566f;
-		angleInner = angleInner + 1.2566f;
-	/*glVertex3f(cos(angleOuter),sin(angleOuter),0.0f);
-	glVertex3f(cos(angleInner)*multiplier,sin(angleInner)*multiplier,0.0f);
-	angleOuter = angleOuter + 1.2566f;
-	angleInner = angleInner + 1.2566f;
-	glVertex3f(cos(angleOuter),sin(angleOuter),0.0f);
-	glVertex3f(cos(angleInner)*multiplier,sin(angleInner)*multiplier,0.0f);
-	angleOuter = angleOuter + 1.2566f;
-	angleInner = angleInner + 1.2566f;
-	glVertex3f(cos(angleOuter),sin(angleOuter),0.0f);
-	glVertex3f(cos(angleInner)*multiplier,sin(angleInner)*multiplier,0.0f);
-	angleOuter = angleOuter + 1.2566f;
-	angleInner = angleInner + 1.2566f;
-	glVertex3f(cos(angleOuter),sin(angleOuter),0.0f);
-	glVertex3f(cos(angleInner)*multiplier,sin(angleInner)*multiplier,0.0f);*/
-	}
-	glEnd();
-}
 
-void DrawPoints(){
-	glBegin(GL_POINTS);
-	for(float angleC = 0.0f;angleC <= 2.0f * PI;angleC = angleC+ 1.2566f){
-		glVertex3f(cos(angleC),sin(angleC),0.0f);
-	}
-	
-	GLfloat multiplier = 0.5f;
-	for(float angleC = 0.6283f;angleC <= 2.0f * PI;angleC = angleC+ 1.2566f){
-		glVertex3f(cos(angleC)*multiplier,sin(angleC)*multiplier,0.0f);
-	}
-	glEnd();
-}
-
-void DrawSinglePoint(){
-	glPointSize(2600.0f);
-	
-	glBegin(GL_POINTS);
-	glColor3f(0.0f,0.0f,1.0f);
-	glVertex3f(0.0f,0.0f,0.0f);
-	glEnd();
-	glPointSize(1.0f);
-}
-
-void DrawHVLine(){
-	glBegin(GL_LINES);
-	glVertex3f(0.0f,1.0f,0.0f);
-	glVertex3f(0.0f,-1.0f,0.0f);
-	
-	glVertex3f(1.0f,0.0f,0.0f);
-	glVertex3f(-1.0f,0.0f,0.0f);
-	glEnd();
-}
 void resize(int width,int height){
 	if(height == 0){
 		height = 1;
