@@ -33,7 +33,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("Static India");
+	TCHAR WinName[] = TEXT("Trafic Signal");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
@@ -263,8 +263,6 @@ void initialize(){
 void display(){
 	void drawTrafficSignal(void);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //GL_DEPTH_BUFFER_BIT added for 3D support
-	//glColor3f(1.0f,0.0f,0.0f);
-	//glColor3f(0.0f,1.0f,0.0f);
 	
 	drawTrafficSignal();
 	SwapBuffers(ghdc);
@@ -310,10 +308,6 @@ void drawTrafficSignal(){
 	glTranslatef(0.0f,-0.5f+yTrans,zTrans);
 	drawGCircle();
 	
-	/*glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(0.0f,0.0f,-3.0f);
-	drawQuad1();*/
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glTranslatef(0.0f,-0.85f+yTrans,zTrans);
