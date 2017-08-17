@@ -25,7 +25,17 @@ HGLRC ghrc = NULL;
 GLUquadric *quadric = NULL;
 //circle
 GLfloat PI = 3.1415;
-GLfloat CIRCLE_SIZE = 0.2f;
+GLfloat CIRCLE_SIZE = 0.04f;
+GLfloat POLE_HEIGHT = 0.5f;
+GLfloat CABINATE_HEIGHT = 0.3f;
+GLfloat TOTAL_HEIGHT = POLE_HEIGHT+CABINATE_HEIGHT;
+GLfloat CABINATE_WIDTH = 0.2f;
+GLfloat XLOC = 0.08f;
+bool gbRPressed = false;
+bool gbGPressed = true;
+bool gbYPressed = false;
+GLfloat zTrans = -3.0f;
+GLfloat yTrans = POLE_HEIGHT;
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
 	void initialize(void);
 	void uninitialize(void);
@@ -146,10 +156,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
 		break;*/ //removed as not needed for double buffering
 		case WM_KEYDOWN:
 			switch(wParam){
-				
+				case 0x31:
+					gbRPressed = true;
+					gbGPressed = true;
+					gbYPressed = true;
+				break;
+				case 0x32:
+					gbRPressed = false;
+					gbGPressed = false;
+					gbYPressed = false;
+				break;
+				case 'R':
+					if(gbRPressed==false)
+						gbRPressed = true;
+					else
+						gbRPressed = false;
+				break;
+				case 'G':
+					if(gbGPressed==false)
+						gbGPressed = true;
+					else
+						gbGPressed = false;
+				break;
+				case 'Y':
+					if(gbYPressed==false)
+						gbYPressed = true;
+					else
+						gbYPressed = false;
+				break;
 				case VK_ESCAPE:
 					gbEscapePressed = true;
-					break;
 				break;
 				case 0x46: //F or f key
 						ToggleFullscreen();
@@ -262,16 +298,76 @@ void initialize(){
 
 void display(){
 	void drawTrafficSignal(void);
+	void drawAxis(void);
+	void drawGround(void);
+	void drawBuildingInFirstQuadrant(void);
+	void drawBuildingInSecondQuadrant(void);
+	void drawCar(void);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //GL_DEPTH_BUFFER_BIT added for 3D support
 	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,0.0f,-3.0f);
+	
+	
+	drawAxis();
+	drawGround();
 	drawTrafficSignal();
+	
+	drawBuildingInFirstQuadrant();
+	drawBuildingInSecondQuadrant();
+	
+	//glRotatef(90,1.0f,1.0f,0.0f);
+	drawCar();
 	SwapBuffers(ghdc);
 }
 
 void drawTrafficSignal(){
-	void drawRCircle(void);
-	void drawGCircle(void);
-	void drawYCircle(void);
+	void drawRCircle(GLfloat,GLfloat,GLfloat);
+	void drawGCircle(GLfloat,GLfloat,GLfloat);
+	void drawYCircle(GLfloat,GLfloat,GLfloat);
+	void drawCabinate(void);
+	void drawPipe(void);
+	
+	
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,0.0f,zTrans);
+	drawCabinate();
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,yTrans+0.25f,zTrans);
+	drawRCircle(0.0f,0.0f,0.0f);
+	if(gbRPressed==true){
+		drawRCircle(1.0f,0.0f,0.0f);
+	}
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,yTrans+0.15f,zTrans);
+	drawYCircle(0.0f,0.0f,0.0f);
+	if(gbYPressed==true){
+		drawYCircle(1.0f,1.0f,0.0f);
+	}
+	
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,0.05f+yTrans,zTrans);
+	drawGCircle(0.0f,0.0f,0.0f);
+	if(gbGPressed==true){
+		drawGCircle(0.0f,1.0f,0.0f);
+	}
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,0.0f,zTrans);
+	drawPipe();
+}
+
+void drawCabinate(){
 	void drawQuad(void);
 	void drawQuad1(void);
 	void drawQuad2(void);
@@ -279,12 +375,10 @@ void drawTrafficSignal(){
 	void drawQuad4(void);
 	void drawQuad5(void);
 	void drawQuad6(void);
-	void drawPipe(void);
-	GLfloat zTrans = -5.0f;
-	GLfloat yTrans = 0.70f;
+	
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(0.0f,yTrans+0.0f,zTrans);
+	glTranslatef(0.0f,0.0f,-3.0f);
 	drawQuad();
 	drawQuad1();
 	drawQuad2();
@@ -292,34 +386,152 @@ void drawTrafficSignal(){
 	drawQuad4();
 	drawQuad5();
 	drawQuad6();
+}
+void drawQuad(){
+	glBegin(GL_QUADS);
+	glColor3f(0.40f,0.40f,0.40f);
+	glVertex3f(XLOC,POLE_HEIGHT,0.0f);
+	glVertex3f(-XLOC,POLE_HEIGHT,0.0f);
+	glVertex3f(-XLOC,POLE_HEIGHT+CABINATE_HEIGHT,0.0f);
+	glVertex3f(XLOC,POLE_HEIGHT+CABINATE_HEIGHT,0.0f);
+	glEnd();
+}
+
+void drawQuad1(){
+	GLfloat sideMargin = 0.01f;
+	GLfloat lPg = 0.07f;;
+	glBegin(GL_QUADS);
+	glColor3f(0.40f,0.40f,0.40f);
+	glVertex3f(XLOC,TOTAL_HEIGHT-sideMargin,0.0f);
+	glVertex3f(XLOC,TOTAL_HEIGHT-lPg - sideMargin,0.0f);
+	glVertex3f((GLfloat)(((CABINATE_WIDTH-lPg - sideMargin)*3/4)/2)+XLOC,TOTAL_HEIGHT-lPg - sideMargin,0.0f);
+	glVertex3f(XLOC+(CABINATE_WIDTH-lPg - sideMargin)*3/4,TOTAL_HEIGHT - sideMargin,0.0f);
+	glEnd();
+}
+
+void drawQuad2(){
+	GLfloat sideMargin = 0.01f;
+	GLfloat lPg = 0.07f;
+	GLfloat gap = 0.035f;
+	glBegin(GL_QUADS);
+	glColor3f(0.40f,0.40f,0.40f);
+	glVertex3f(XLOC,TOTAL_HEIGHT-sideMargin-lPg-gap,0.0f);
+	glVertex3f(XLOC,TOTAL_HEIGHT-lPg-lPg-sideMargin-gap,0.0f);
+	glVertex3f((GLfloat)(((CABINATE_WIDTH-lPg - sideMargin)*3/4)/2)+XLOC,TOTAL_HEIGHT-lPg-lPg-sideMargin-gap,0.0f);
+	glVertex3f(XLOC+(CABINATE_WIDTH-lPg - sideMargin)*3/4,TOTAL_HEIGHT-sideMargin-lPg-gap,0.0f);
+	glEnd();
+}
+
+void drawQuad3(){
+	GLfloat sideMargin = 0.01f;
+	GLfloat lPg = 0.07f;
+	GLfloat gap = 0.035f;
+	glBegin(GL_QUADS);
+	glColor3f(0.40f,0.40f,0.40f);
+	glVertex3f(XLOC,TOTAL_HEIGHT-sideMargin-lPg-gap-lPg-gap,0.0f);
+	glVertex3f(XLOC,TOTAL_HEIGHT-lPg-lPg-lPg-sideMargin-gap-gap,0.0f);
+	glVertex3f((GLfloat)(((CABINATE_WIDTH-lPg - sideMargin)*3/4)/2)+XLOC,TOTAL_HEIGHT-lPg-lPg-lPg-sideMargin-gap-gap,0.0f);
+	glVertex3f(XLOC+(CABINATE_WIDTH-lPg - sideMargin)*3/4,TOTAL_HEIGHT-sideMargin-lPg-gap-lPg-gap,0.0f);
+	
+	
+	glEnd();
+}
+
+void drawQuad4(){
+	GLfloat sideMargin = 0.01f;
+	GLfloat lPg = 0.07f;
+	GLfloat gap = 0.035f;
+	glBegin(GL_QUADS);
+	glColor3f(0.40f,0.40f,0.40f);
+	glVertex3f(-XLOC,TOTAL_HEIGHT-sideMargin,0.0f);
+	glVertex3f(-XLOC,TOTAL_HEIGHT-lPg - sideMargin,0.0f);
+	glVertex3f(-((GLfloat)(((CABINATE_WIDTH-lPg - sideMargin)*3/4)/2)+XLOC),TOTAL_HEIGHT-lPg - sideMargin,0.0f);
+	glVertex3f(-(XLOC+(CABINATE_WIDTH-lPg - sideMargin)*3/4),TOTAL_HEIGHT - sideMargin,0.0f);
+	
+	
+	glEnd();
+}
+
+void drawQuad5(){
+	GLfloat sideMargin = 0.01f;
+	GLfloat lPg = 0.07f;
+	GLfloat gap = 0.035f;
+	glBegin(GL_QUADS);
+	glColor3f(0.40f,0.40f,0.40f);
+	glVertex3f(-XLOC,TOTAL_HEIGHT-sideMargin-lPg-gap,0.0f);
+	glVertex3f(-XLOC,TOTAL_HEIGHT-lPg-lPg-sideMargin-gap,0.0f);
+	glVertex3f(-((GLfloat)(((CABINATE_WIDTH-lPg - sideMargin)*3/4)/2)+XLOC),TOTAL_HEIGHT-lPg-lPg-sideMargin-gap,0.0f);
+	glVertex3f(-(XLOC+(CABINATE_WIDTH-lPg - sideMargin)*3/4),TOTAL_HEIGHT-sideMargin-lPg-gap,0.0f);
+	
+	
+	glEnd();
+}
+
+void drawQuad6(){
+	GLfloat sideMargin = 0.01f;
+	GLfloat lPg = 0.07f;
+	GLfloat gap = 0.035f;
+	glBegin(GL_QUADS);
+	glColor3f(0.40f,0.40f,0.40f);
+	glVertex3f(-XLOC,TOTAL_HEIGHT-sideMargin-lPg-gap-lPg-gap,0.0f);
+	glVertex3f(-XLOC,TOTAL_HEIGHT-lPg-lPg-lPg-sideMargin-gap-gap,0.0f);
+	glVertex3f(-((GLfloat)(((CABINATE_WIDTH-lPg - sideMargin)*3/4)/2)+XLOC),TOTAL_HEIGHT-lPg-lPg-lPg-sideMargin-gap-gap,0.0f);
+	glVertex3f(-(XLOC+(CABINATE_WIDTH-lPg - sideMargin)*3/4),TOTAL_HEIGHT-sideMargin-lPg-gap-lPg-gap,0.0f);
+	
+	
+	glEnd();
+}
+
+
+
+void drawGround(){
+	void drawHorizontalRoad(void);
+	void drawVerticalRoad(void);
+	void drawSecondQuadrantGreenArea(void);
+	void drawThirdQuadrantGreenArea(void);
+	void drawFirstQuadrantGreenArea(void);
+	void drawFourthQuadrantGreenArea(void);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(0.0f,yTrans+0.5f,zTrans);
-	drawRCircle();
+	glTranslatef(0.0f,0.0f,-3.0f);
 	
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(0.0f,yTrans+0.0f,zTrans);
-	drawYCircle();
-	
-	
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(0.0f,-0.5f+yTrans,zTrans);
-	drawGCircle();
-	
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(0.0f,-0.85f+yTrans,zTrans);
-	drawPipe();
+	drawHorizontalRoad();
+	drawVerticalRoad();
+	drawFirstQuadrantGreenArea();
+	drawFourthQuadrantGreenArea();
+	drawThirdQuadrantGreenArea();
+	drawSecondQuadrantGreenArea();
 }
 void drawPipe(){
 	glBegin(GL_QUADS);
-	glColor3f(0.75f,0.75,0.75f);
-	glVertex3f(0.1f,0.1f,0.0f);
-	glVertex3f(-0.1f,0.1f,0.0f);
-	glVertex3f(-0.1f,-1.0f,0.0f);
-	glVertex3f(0.1f,-1.0f,0.0f);
+	glColor3f(0.40f,0.40f,0.40f);
+	glVertex3f(-0.03f,POLE_HEIGHT,0.0f);
+	glVertex3f(0.03f,POLE_HEIGHT,0.0f);
+	glVertex3f(0.03f,0.0f,0.0f);
+	glVertex3f(-0.03f,0.0f,0.0f);
+	glEnd();
+	
+	glBegin(GL_TRIANGLES);
+	glColor3f(0.40f,0.40f,0.40f);
+	//front
+	glVertex3f(0.0f,0.2f,-0.25f);
+	glVertex3f(0.05f,0.0f,0.0f);
+	glVertex3f(-0.05f,0.0f,0.0f);
+	
+	//right
+	glVertex3f(0.0f,0.2f,-0.25f);
+	glVertex3f(0.05f,0.0f,0.0f);
+	glVertex3f(0.05f,0.0f,-0.05f);
+	
+	//back
+	glVertex3f(0.0f,0.2f,-0.25f);
+	glVertex3f(0.05f,0.0f,-0.05f);
+	glVertex3f(-0.05f,0.0f,-0.05f);
+	
+	//left
+	glVertex3f(0.0f,0.2f,-0.25f);
+	glVertex3f(-0.05f,0.0f,0.0f);
+	glVertex3f(-0.05f,0.0f,-0.05f);
 	glEnd();
 }
 void drawSphere(){
@@ -329,131 +541,539 @@ void drawSphere(){
 	glScalef(0.0f,0.0f,0.0f);
 	gluSphere(quadric, 0.75f,30,30);
 }
-void drawRCircle(){
+void drawRCircle(GLfloat lRColor,GLfloat lGColor,GLfloat lBColor){
 	glBegin(GL_TRIANGLE_FAN);
-	glColor3f(1.0f,0.0f,0.0f);
+	glColor3f(lRColor,lGColor,lBColor);
 	for(float angle=0.0f;angle<(2.0f*PI); angle = angle + 0.01){
 		glVertex3f(cos(angle)*CIRCLE_SIZE,sin(angle)*CIRCLE_SIZE,0.0f);
 	}
 	glEnd();
 }
 
-void drawQuad(){
-	glBegin(GL_QUADS);
-	glColor3f(0.70f,0.70f,0.70f);
-	glVertex3f(0.3f,0.75f,0.0f);
-	glVertex3f(-0.3f,0.75f,0.0f);
-	glVertex3f(-0.3f,-0.75f,0.0f);
-	glVertex3f(0.3f,-0.75f,0.0f);
-	glEnd();
-}
 
-void drawQuad1(){
-	GLfloat sideMargin = 0.05f;
-	GLfloat lPg = 0.35f;
-	GLfloat tPg = 0.45f;
-	glBegin(GL_QUADS);
-	glColor3f(0.70f,0.70f,0.70f);
-	glVertex3f(0.3f,0.75f-sideMargin,0.0f);
-	glVertex3f(0.3f,0.75f-lPg - sideMargin,0.0f);
-	glVertex3f((GLfloat)(((0.75f-lPg - sideMargin)*3/4)/2)+0.30f,0.75f-lPg - sideMargin,0.0f);
-	glVertex3f(0.30f+(0.75f-lPg - sideMargin)*3/4,0.75f - sideMargin,0.0f);
-	
-	
-	glEnd();
-}
-
-void drawQuad2(){
-	GLfloat sideMargin = 0.05f;
-	GLfloat lPg = 0.35f;
-	GLfloat tPg = 0.45f;
-	GLfloat gap = 0.175f;
-	glBegin(GL_QUADS);
-	glColor3f(0.70f,0.70f,0.70f);
-	glVertex3f(0.3f,0.75f-sideMargin-lPg-gap,0.0f);
-	glVertex3f(0.3f,0.75f-lPg-lPg-sideMargin-gap,0.0f);
-	glVertex3f((GLfloat)(((0.75f-lPg - sideMargin)*3/4)/2)+0.30f,0.75f-lPg-lPg-sideMargin-gap,0.0f);
-	glVertex3f(0.30f+(0.75f-lPg - sideMargin)*3/4,0.75f-sideMargin-lPg-gap,0.0f);
-	
-	
-	glEnd();
-}
-
-void drawQuad3(){
-	GLfloat sideMargin = 0.05f;
-	GLfloat lPg = 0.35f;
-	GLfloat tPg = 0.45f;
-	GLfloat gap = 0.175f;
-	glBegin(GL_QUADS);
-	glColor3f(0.70f,0.70f,0.70f);
-	glVertex3f(0.3f,0.75f-sideMargin-lPg-gap-lPg-gap,0.0f);
-	glVertex3f(0.3f,0.75f-lPg-lPg-lPg-sideMargin-gap-gap,0.0f);
-	glVertex3f((GLfloat)(((0.75f-lPg - sideMargin)*3/4)/2)+0.30f,0.75f-lPg-lPg-lPg-sideMargin-gap-gap,0.0f);
-	glVertex3f(0.30f+(0.75f-lPg - sideMargin)*3/4,0.75f-sideMargin-lPg-gap-lPg-gap,0.0f);
-	
-	
-	glEnd();
-}
-
-void drawQuad4(){
-	GLfloat sideMargin = 0.05f;
-	GLfloat lPg = 0.35f;
-	GLfloat tPg = 0.45f;
-	glBegin(GL_QUADS);
-	glColor3f(0.70f,0.70f,0.70f);
-	glVertex3f(-0.3f,0.75f-sideMargin,0.0f);
-	glVertex3f(-0.3f,0.75f-lPg - sideMargin,0.0f);
-	glVertex3f(-((GLfloat)(((0.75f-lPg - sideMargin)*3/4)/2)+0.30f),0.75f-lPg - sideMargin,0.0f);
-	glVertex3f(-(0.30f+(0.75f-lPg - sideMargin)*3/4),0.75f - sideMargin,0.0f);
-	
-	
-	glEnd();
-}
-
-void drawQuad5(){
-	GLfloat sideMargin = 0.05f;
-	GLfloat lPg = 0.35f;
-	GLfloat tPg = 0.45f;
-	GLfloat gap = 0.175f;
-	glBegin(GL_QUADS);
-	glColor3f(0.70f,0.70f,0.70f);
-	glVertex3f(-0.3f,0.75f-sideMargin-lPg-gap,0.0f);
-	glVertex3f(-0.3f,0.75f-lPg-lPg-sideMargin-gap,0.0f);
-	glVertex3f(-((GLfloat)(((0.75f-lPg - sideMargin)*3/4)/2)+0.30f),0.75f-lPg-lPg-sideMargin-gap,0.0f);
-	glVertex3f(-(0.30f+(0.75f-lPg - sideMargin)*3/4),0.75f-sideMargin-lPg-gap,0.0f);
-	
-	
-	glEnd();
-}
-
-void drawQuad6(){
-	GLfloat sideMargin = 0.05f;
-	GLfloat lPg = 0.35f;
-	GLfloat tPg = 0.45f;
-	GLfloat gap = 0.175f;
-	glBegin(GL_QUADS);
-	glColor3f(0.70f,0.70f,0.70f);
-	glVertex3f(-0.3f,0.75f-sideMargin-lPg-gap-lPg-gap,0.0f);
-	glVertex3f(-0.3f,0.75f-lPg-lPg-lPg-sideMargin-gap-gap,0.0f);
-	glVertex3f(-((GLfloat)(((0.75f-lPg - sideMargin)*3/4)/2)+0.30f),0.75f-lPg-lPg-lPg-sideMargin-gap-gap,0.0f);
-	glVertex3f(-(0.30f+(0.75f-lPg - sideMargin)*3/4),0.75f-sideMargin-lPg-gap-lPg-gap,0.0f);
-	
-	
-	glEnd();
-}
-void drawGCircle(){
+void drawGCircle(GLfloat lRColor,GLfloat lGColor,GLfloat lBColor){
 	glBegin(GL_TRIANGLE_FAN);
-	glColor3f(0.0f,1.0f,0.0f);
+	glColor3f(lRColor,lGColor,lBColor);
 	for(float angle=0.0f;angle<(2.0f*PI); angle = angle + 0.0001){
 		glVertex3f(cos(angle)*CIRCLE_SIZE,sin(angle)*CIRCLE_SIZE,0.0f);
 	}
 	glEnd();
 }
 
-void drawYCircle(){
+void drawYCircle(GLfloat lRColor,GLfloat lGColor,GLfloat lBColor){
 	glBegin(GL_TRIANGLE_FAN);
-	glColor3f(1.0f,1.0f,0.0f);
+	glColor3f(lRColor,lGColor,lBColor);
 	for(float angle=0.0f;angle<(2.0f*PI); angle = angle + 0.0001){
+		glVertex3f(cos(angle)*CIRCLE_SIZE,sin(angle)*CIRCLE_SIZE,0.0f);
+	}
+	glEnd();
+}
+
+void drawAxis(){
+	glBegin(GL_LINES);
+	glColor3f(1.0f,1.0f,1.0f);
+	glVertex3f(0.0f,1.0f,0.0f);
+	glVertex3f(0.0f,-1.0f,0.0f);
+	glVertex3f(-1.0f,0.0f,0.0f);
+	glVertex3f(1.0f,0.0f,0.0f);
+	glEnd();
+}
+void drawVerticalRoad(){
+	GLfloat lzTrans = 1.0f;
+	GLfloat lyTrans = 0.1f;
+	GLfloat lxTrans = 0.3f;
+	glBegin(GL_QUADS);
+	glColor3f(0.75f,0.75f,0.75f);
+	glVertex3f(-lxTrans,lyTrans,-lzTrans);
+	glVertex3f(-lxTrans,-lyTrans,lzTrans);
+	glVertex3f(lxTrans,-lyTrans,lzTrans);
+	glVertex3f(lxTrans,lyTrans,-lzTrans);
+	glEnd();
+}
+
+void drawHorizontalRoad(){
+	GLfloat lzTrans = 0.3f;
+	GLfloat lyTrans = 0.05f;
+	GLfloat lxTrans = 1.0f;
+	glBegin(GL_QUADS);
+	glColor3f(0.75f,0.75f,0.75f);
+	glVertex3f(-lxTrans,-lyTrans,lzTrans);
+	glVertex3f(-lxTrans,lyTrans,-lzTrans);
+	glVertex3f(lxTrans,lyTrans,-lzTrans);
+	glVertex3f(lxTrans,-lyTrans,lzTrans);
+	glEnd();
+}
+
+void drawThirdQuadrantGreenArea(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,1.0f,0.0f);
+	glVertex3f(-1.0f,-0.1f,1.0f);
+	glVertex3f(-0.3f,-0.1f,1.0f);
+	glVertex3f(-0.3f,-0.05f,0.3f);
+	glVertex3f(-1.0f,-0.05f,0.3f);
+	glEnd();
+}
+
+void drawFourthQuadrantGreenArea(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,1.0f,0.0f);
+	glVertex3f(1.0f,-0.1f,1.0f);
+	glVertex3f(0.3f,-0.1f,1.0f);
+	glVertex3f(0.3f,-0.05f,0.3f);
+	glVertex3f(1.0f,-0.05f,0.3f);
+	glEnd();
+}
+
+void drawFirstQuadrantGreenArea(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,1.0f,0.0f);
+	glVertex3f(1.0f,0.1f,-1.0f);
+	glVertex3f(0.3f,0.1f,-1.0f);
+	glVertex3f(0.3f,0.05f,-0.3f);
+	glVertex3f(1.0f,0.05f,-0.3f);
+	glEnd();
+}
+
+
+void drawSecondQuadrantGreenArea(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,1.0f,0.0f);
+	glVertex3f(-1.0f,0.1f,-1.0f);
+	glVertex3f(-0.3f,0.1f,-1.0f);
+	glVertex3f(-0.3f,0.05f,-0.3f);
+	glVertex3f(-1.0f,0.05f,-0.3f);
+	glEnd();
+}
+
+void drawBuildingInFirstQuadrant(){
+	void drawLeftPartOfBuilding(void);
+	void drawRightPartOfBuilding(void);
+	void drawMiddlePartOfBuilding(void);
+	void drawBuildingTriangles(void);
+	void drawWallsOfBuildingInFirstQuadrant(void);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,0.0f,zTrans);
+	drawLeftPartOfBuilding();
+	drawRightPartOfBuilding();
+	drawMiddlePartOfBuilding();
+	drawBuildingTriangles();
+	drawWallsOfBuildingInFirstQuadrant();
+}
+
+void drawLeftPartOfBuilding(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.50f);
+	glVertex3f(0.35f,0.0f,-0.4f);
+	glVertex3f(0.55f,0.0f,-0.4f);
+	glVertex3f(0.55f,0.5f,-0.4f);
+	glVertex3f(0.35f,0.5f,-0.4f);
+	glEnd();
+	
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,0.20f);
+	glVertex3f(0.40f,0.2f,-0.4f);
+	glVertex3f(0.50f,0.2f,-0.4f);
+	glVertex3f(0.50f,0.4f,-0.4f);
+	glVertex3f(0.40f,0.4f,-0.4f);
+	glEnd();
+}
+
+void drawRightPartOfBuilding(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.50f);
+	glVertex3f(0.8f,0.0f,-0.4f);
+	glVertex3f(1.0f,0.0f,-0.4f);
+	glVertex3f(1.0f,0.5f,-0.4f);
+	glVertex3f(0.8f,0.5f,-0.4f);
+	glEnd();
+	
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,0.20f);
+	glVertex3f(0.85f,0.2f,-0.4f);
+	glVertex3f(0.95f,0.2f,-0.4f);
+	glVertex3f(0.95f,0.4f,-0.4f);
+	glVertex3f(0.85f,0.4f,-0.4f);
+	glEnd();
+}
+
+void drawMiddlePartOfBuilding(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.50f);
+	glVertex3f(0.55f,0.2f,-0.4f);
+	glVertex3f(0.8f,0.2f,-0.4f);
+	glVertex3f(0.8f,0.7f,-0.4f);
+	glVertex3f(0.55f,0.7f,-0.4f);
+	glEnd();
+	
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,0.50f);
+	glVertex3f(0.60f,0.25f,-0.4f);
+	glVertex3f(0.63f,0.25f,-0.4f);
+	glVertex3f(0.63f,0.6f,-0.4f);
+	glVertex3f(0.60f,0.6f,-0.4f);
+	glEnd();
+	
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,0.50f);
+	glVertex3f(0.65f,0.25f,-0.4f);
+	glVertex3f(0.77f,0.25f,-0.4f);
+	glVertex3f(0.77f,0.6f,-0.4f);
+	glVertex3f(0.65f,0.6f,-0.4f);
+	glEnd();
+}
+
+void drawBuildingTriangles(){
+		glBegin(GL_TRIANGLES);
+		glColor3f(0.50f,0.0f,0.0f);
+		//left
+		glVertex3f(0.35f,0.5f,-0.4f);
+		glVertex3f(0.55f,0.5f,-0.4f);
+		glVertex3f((0.35f+0.55f)/2,0.7f,-0.4f);
+		//right
+		glVertex3f(0.8f,0.5f,-0.4f);
+		glVertex3f(1.0f,0.5f,-0.4f);
+		glVertex3f((0.8f+1.0f)/2,0.7f,-0.4f);
+		
+		//middle
+		glVertex3f(0.55f,0.7f,-0.4f);
+		glVertex3f(0.8f,0.7f,-0.4f);
+		glVertex3f((0.55f+0.8f)/2,0.9f,-0.4f);
+		glEnd();
+}
+
+void drawWallsOfBuildingInFirstQuadrant(){
+	//left wall
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.0f);
+	glVertex3f(0.35f,0.0f,-0.4f);
+	glVertex3f(0.35f,0.5f,-0.4f);
+	glVertex3f(0.35f,0.5f,-0.9f);
+	glVertex3f(0.35f,0.0f,-0.9f);
+	glEnd();
+	
+	//right wall
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.0f);
+	glVertex3f(1.0f,0.0f,-0.4f);
+	glVertex3f(1.0f,0.5f,-0.4f);
+	glVertex3f(1.0f,0.5f,-0.9f);
+	glVertex3f(1.0f,0.0f,-0.9f);
+	glEnd();
+	
+	//top wall
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.0f);
+	glVertex3f(0.35f,0.5f,-0.4f);
+	glVertex3f(1.0f,0.5f,-0.4f);
+	glVertex3f(1.0f,0.5f,-0.9f);
+	glVertex3f(0.35f,0.5f,-0.9f);
+	
+	//back wall
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.25f,0.0f);
+	glVertex3f(0.35f,0.5f,-0.9f);
+	glVertex3f(0.35f,0.0f,-0.9f);
+	glVertex3f(1.0f,0.0f,-0.9f);
+	glVertex3f(1.0f,0.5f,-0.9f);
+	glEnd();
+}
+
+void drawBuildingInSecondQuadrant(){
+	void drawLeftPartOfBuildingInS(void);
+	void drawRightPartOfBuildingInS(void);
+	void drawMiddlePartOfBuildingInS(void);
+	void drawBuildingTrianglesInS(void);
+	void drawWallsOfBuildingInSecondQuadrant(void);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,0.0f,zTrans);
+	drawLeftPartOfBuildingInS();
+	drawRightPartOfBuildingInS();
+	drawMiddlePartOfBuildingInS();
+	drawBuildingTrianglesInS();
+	drawWallsOfBuildingInSecondQuadrant();
+}
+
+void drawLeftPartOfBuildingInS(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.50f);
+	glVertex3f(-0.35f,0.0f,-0.4f);
+	glVertex3f(-0.55f,0.0f,-0.4f);
+	glVertex3f(-0.55f,0.5f,-0.4f);
+	glVertex3f(-0.35f,0.5f,-0.4f);
+	glEnd();
+	
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,0.20f);
+	glVertex3f(-0.40f,0.2f,-0.4f);
+	glVertex3f(-0.50f,0.2f,-0.4f);
+	glVertex3f(-0.50f,0.4f,-0.4f);
+	glVertex3f(-0.40f,0.4f,-0.4f);
+	glEnd();
+}
+
+void drawRightPartOfBuildingInS(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.50f);
+	glVertex3f(-0.8f,0.0f,-0.4f);
+	glVertex3f(-1.0f,0.0f,-0.4f);
+	glVertex3f(-1.0f,0.5f,-0.4f);
+	glVertex3f(-0.8f,0.5f,-0.4f);
+	glEnd();
+	
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,0.20f);
+	glVertex3f(-0.85f,0.2f,-0.4f);
+	glVertex3f(-0.95f,0.2f,-0.4f);
+	glVertex3f(-0.95f,0.4f,-0.4f);
+	glVertex3f(-0.85f,0.4f,-0.4f);
+	glEnd();
+}
+
+void drawMiddlePartOfBuildingInS(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.50f);
+	glVertex3f(-0.55f,0.2f,-0.4f);
+	glVertex3f(-0.8f,0.2f,-0.4f);
+	glVertex3f(-0.8f,0.7f,-0.4f);
+	glVertex3f(-0.55f,0.7f,-0.4f);
+	glEnd();
+	
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,0.50f);
+	glVertex3f(-0.60f,0.25f,-0.4f);
+	glVertex3f(-0.63f,0.25f,-0.4f);
+	glVertex3f(-0.63f,0.6f,-0.4f);
+	glVertex3f(-0.60f,0.6f,-0.4f);
+	glEnd();
+	
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,0.50f);
+	glVertex3f(-0.65f,0.25f,-0.4f);
+	glVertex3f(-0.77f,0.25f,-0.4f);
+	glVertex3f(-0.77f,0.6f,-0.4f);
+	glVertex3f(-0.65f,0.6f,-0.4f);
+	glEnd();
+}
+
+void drawBuildingTrianglesInS(){
+		glBegin(GL_TRIANGLES);
+		glColor3f(0.50f,0.0f,0.0f);
+		//left
+		glVertex3f(-0.35f,0.5f,-0.4f);
+		glVertex3f(-0.55f,0.5f,-0.4f);
+		glVertex3f(-(0.35f+0.55f)/2,0.7f,-0.4f);
+		//right
+		glVertex3f(-0.8f,0.5f,-0.4f);
+		glVertex3f(-1.0f,0.5f,-0.4f);
+		glVertex3f(-(0.8f+1.0f)/2,0.7f,-0.4f);
+		
+		//middle
+		glVertex3f(-0.55f,0.7f,-0.4f);
+		glVertex3f(-0.8f,0.7f,-0.4f);
+		glVertex3f(-(0.55f+0.8f)/2,0.9f,-0.4f);
+		glEnd();
+}
+
+void drawWallsOfBuildingInSecondQuadrant(){
+	//left wall
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.0f);
+	glVertex3f(-0.35f,0.0f,-0.4f);
+	glVertex3f(-0.35f,0.5f,-0.4f);
+	glVertex3f(-0.35f,0.5f,-0.9f);
+	glVertex3f(-0.35f,0.0f,-0.9f);
+	glEnd();
+	
+	//right wall
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.0f);
+	glVertex3f(-1.0f,0.0f,-0.4f);
+	glVertex3f(-1.0f,0.5f,-0.4f);
+	glVertex3f(-1.0f,0.5f,-0.9f);
+	glVertex3f(-1.0f,0.0f,-0.9f);
+	glEnd();
+	
+	//top wall
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.50f,0.0f);
+	glVertex3f(-0.35f,0.5f,-0.4f);
+	glVertex3f(-1.0f,0.5f,-0.4f);
+	glVertex3f(-1.0f,0.5f,-0.9f);
+	glVertex3f(-0.35f,0.5f,-0.9f);
+	
+	//back wall
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.25f,0.0f);
+	glVertex3f(-0.35f,0.5f,-0.9f);
+	glVertex3f(-0.35f,0.0f,-0.9f);
+	glVertex3f(-1.0f,0.0f,-0.9f);
+	glVertex3f(-1.0f,0.5f,-0.9f);
+	glEnd();
+}
+
+void drawCar(){
+	void drawCarFrontSideArea(void);
+	void drawCarRearArea(void);
+	void drawFWheel(void);
+	void drawBWheel(void);
+	void drawFRWheel(void);
+	void drawBRWheel(void);
+	void drawCarFrontViewArea(void);
+	void drawCarBackAread(void);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,0.0f,zTrans);
+	drawCarFrontSideArea();
+	drawCarRearArea();
+	
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,0.0f,zTrans);
+	drawCarFrontViewArea();
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,0.0f,zTrans);
+	drawCarBackAread();
+	
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-0.55f,0.0f,zTrans+0.2f);
+	drawFWheel();
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-0.7f,0.0f,zTrans+0.2f);
+	drawBWheel();
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-0.55f,0.0f,zTrans+0.2f-0.1f);
+	drawFRWheel();
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-0.7f,0.0f,zTrans+0.2f-0.1f);
+	drawBRWheel();
+}
+
+void drawCarFrontSideArea(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,1.0f);
+	glVertex3f(-0.8f,0.15f,0.0f);
+	glVertex3f(-0.9f,-0.1f,0.0f);
+	glVertex3f(-0.4f,-0.1f,0.0f);
+	glVertex3f(-0.6f,0.15f,0.0f);
+	glEnd();
+	
+	glBegin(GL_LINES);
+	glColor3f(0.0f,0.0f,0.0f);
+	//middle line
+	glVertex3f(-0.84f,0.05f,0.0f);
+	glVertex3f(-0.52f,0.05f,0.0f);
+	
+	//top
+	glVertex3f(-0.8f,0.14f,0.0f);
+	glVertex3f(-0.6f,0.14f,0.0f);
+	
+	//verticals
+	glVertex3f(-0.8f,0.14f,0.0f);
+	glVertex3f(-0.8f,0.05f,0.0f);
+	
+	glVertex3f(-0.7f,0.14f,0.0f);
+	glVertex3f(-0.7f,0.05f,0.0f);
+	
+	glVertex3f(-0.6f,0.14f,0.0f);
+	glVertex3f(-0.6f,0.05f,0.0f);
+	glEnd();
+}
+
+void drawCarBackAread(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,1.0f);
+	glVertex3f(-0.8f,0.15f,0.0f);
+	glVertex3f(-0.8f,0.15f,-0.1f);
+	glVertex3f(-0.9f,-0.1f,-0.1f);
+	glVertex3f(-0.88f,-0.1f,0.0f);
+	glEnd();
+}
+
+void drawCarFrontViewArea(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,1.0f);
+	glVertex3f(-0.6f,0.15f,0.0f);
+	glVertex3f(-0.6f,0.15f,-0.1f);
+	glVertex3f(-0.45f,-0.1f,-0.1f);
+	glVertex3f(-0.45f,-0.1f,0.0f);
+	glEnd();
+}
+
+void drawCarRearArea(){
+	glBegin(GL_QUADS);
+	glColor3f(0.0f,0.0f,1.0f);
+	glVertex3f(-0.8f,0.15f,-0.1f);
+	glVertex3f(-0.9f,-0.1f,-0.1f);
+	glVertex3f(-0.4f,-0.1f,-0.1f);
+	glVertex3f(-0.6f,0.15f,-0.1f);
+	glEnd();
+	
+	glBegin(GL_LINES);
+	glColor3f(0.0f,0.0f,0.0f);
+	//middle line
+	glVertex3f(-0.84f,0.05f,-0.1f);
+	glVertex3f(-0.52f,0.05f,-0.1f);
+	
+	//top
+	glVertex3f(-0.8f,0.14f,-0.1f);
+	glVertex3f(-0.6f,0.14f,-0.1f);
+	
+	//verticals
+	glVertex3f(-0.8f,0.14f,-0.1f);
+	glVertex3f(-0.8f,0.05f,-0.1f);
+	
+	glVertex3f(-0.7f,0.14f,-0.1f);
+	glVertex3f(-0.7f,0.05f,-0.1f);
+	
+	glVertex3f(-0.6f,0.14f,-0.1f);
+	glVertex3f(-0.6f,0.05f,-0.1f);
+	glEnd();
+}
+
+void drawFWheel(){
+	glBegin(GL_TRIANGLE_FAN);
+	glColor3f(0.0f,0.0f,0.0f);
+	for(float angle=0.0f;angle<(2.0f*PI); angle = angle + 0.01){
+		glVertex3f(cos(angle)*CIRCLE_SIZE,sin(angle)*CIRCLE_SIZE,0.0f);
+	}
+	glEnd();
+}
+
+void drawBWheel(){
+	glBegin(GL_TRIANGLE_FAN);
+	glColor3f(0.0f,0.0f,0.0f);
+	for(float angle=0.0f;angle<(2.0f*PI); angle = angle + 0.01){
+		glVertex3f(cos(angle)*CIRCLE_SIZE,sin(angle)*CIRCLE_SIZE,0.0f);
+	}
+	glEnd();
+}
+
+void drawFRWheel(){
+	glBegin(GL_TRIANGLE_FAN);
+	glColor3f(0.0f,0.0f,0.0f);
+	for(float angle=0.0f;angle<(2.0f*PI); angle = angle + 0.01){
+		glVertex3f(cos(angle)*CIRCLE_SIZE,sin(angle)*CIRCLE_SIZE,0.0f);
+	}
+	glEnd();
+}
+
+void drawBRWheel(){
+	glBegin(GL_TRIANGLE_FAN);
+	glColor3f(0.0f,0.0f,0.0f);
+	for(float angle=0.0f;angle<(2.0f*PI); angle = angle + 0.01){
 		glVertex3f(cos(angle)*CIRCLE_SIZE,sin(angle)*CIRCLE_SIZE,0.0f);
 	}
 	glEnd();
