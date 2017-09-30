@@ -252,26 +252,24 @@ void initialize(){
 }
 
 void display(){
-	//void drawCircle(void);
+	void drawCircle(void);
 	void drawCircleT1(void);
 	void drawArc(void);
 	void drawLine(void);
 	void drawRect(void);
-	//void drawArc1(void);
-	//void drawLine1(void);
-	//void drawArc2(void);
-	//void doAdjust1(void);
-	//void doAdjust2(void);
+	void drawArc1(void);
+	void drawLine1(void);
+	void drawArc2(void);
+	void doAdjust1(void);
+	void doAdjust2(void);
 	glClear(GL_COLOR_BUFFER_BIT);
 	
-
 	//outer area
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glTranslatef(0.0f,0.0f,-3.5f);
 	
 	glRotatef(180.0f, 0.0f,0.0f,1.0f);
-	//glScalef(0.50f,0.70f,0.0f);
 	//glColor3f(0.30f,0.30f,1.0f);
 	//glColor3f(0.419608f,0.137255f,0.556863f);
 	//glColor3f( 0.498039f,0.0f,1.0f);
@@ -279,78 +277,179 @@ void display(){
 	drawArc();
 	drawLine();
 	
-	//glRotatef(180.0f, 0.0f,0.0f,1.0f);//for reverting the MV positions
-	
-	//inner upper area
+	//inner area
 	GLfloat zTransf = -8.0f+3.5f;
 	//glMatrixMode(GL_MODELVIEW);
 	//glLoadIdentity();
-	glTranslatef(-0.30f,-0.30f,0.0f);
-	glScalef(0.5f,0.5f,0.0f);
+	glTranslatef(-0.75f,-0.75f,zTransf);
 	//glRotatef(180.0f, 0.0f,0.0f,1.0f);
 	glColor3f(0.0f,0.3f,0.623529f);
 	drawArc();
 	drawLine();
 	
-	//inner lower area
-	glTranslatef(1.4f,1.5f,0.0f);
-	glRotatef(180.0f, 0.0f,0.0f,1.0f);
-	glColor3f(0.0f,0.3f,0.623529f);
+	/*
+	
+	doAdjust1();
+	*/
+	
+	
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
+	//glTranslatef(-0.75f,-0.75f,zTransf);
 	//glColor3f(1.0f,1.0f,1.0f);
-	//glScalef(0.5f-0.5f,0.5f-0.5f,0.0f);
+	//glRotatef(180.0f, 0.0f,0.0f,1.0f);
+	glColor3f(0.0f,0.0f,0.35f);
+	drawArc1();
+	drawLine1();
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-0.75f,-0.75f,zTransf-3.5f);
+	//glRotatef(180.0f, 0.0f,0.0f,1.0f);
+	glColor3f(0.0f,0.3f,0.623529f);
 	drawArc();
 	drawLine();
 	
-	glScalef(0.5f,0.5f,0.0f);
-	//glRotatef(180.0f, 0.0f,0.0f,1.0f);
+	/*
+	doAdjust2();
+	*/
+	/*
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-0.75f,-0.75f,zTransf);
+	glColor3f(0.0f,0.0f,0.35f);
+	drawArc1();
+	drawLine1();
 	
-	glTranslatef(1.3f,1.5f,0.0f);
-	glScalef((0.5f*4.0f),(0.5f*4.0f),0.0f);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f,0.0f,zTransf);
 	glColor3f(1.0f,1.0f,1.0f);
 	drawRect();
 	
-	//upper f curve
-	glTranslatef(-0.3f,-1.0f,0.0f);
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.8f,0.0f,zTransf);
 	glColor3f(1.0f,1.0f,1.0f);
-	drawCircleT1();
-	glTranslatef(-0.2f,-0.2f,0.0f);
-	drawCircleT1();
-	glTranslatef(-0.2f,-0.1f,0.0f);
-	drawCircleT1();
+	drawCircle();
 	
-	//lower f curve
-	glTranslatef(0.9f,2.0f,0.0f);
-	drawCircleT1();
-	glTranslatef(0.0f,0.2f,0.0f);
-	drawCircleT1();
-	glTranslatef(0.2f,0.3f,0.0f);
-	drawCircleT1();
-	glTranslatef(0.2f,0.1f,0.0f);
-	drawCircleT1();
-	
-	glTranslatef(0.2f,-0.6f,0.0f);
-	//inner upper inside
-	
-	glRotatef(180.0f, 0.0f,0.0f,1.0f);
-	glScalef(0.5f,0.5f,0.0f);
-	glColor3f(0.0f,0.0f,0.35f);
-	drawArc();
-	drawLine();
-	
-	
-	//inner lower inside
-	glTranslatef(2.9f,2.8f,0.0f);
-	glColor3f(0.0f,0.0f,0.35f);
-	glRotatef(180.0f, 0.0f,0.0f,1.0f);
-	drawArc();
-	drawLine();
-	
-	
-	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-0.8f,0.0f,zTransf);
+	glColor3f(1.0f,1.0f,1.0f);
+	drawCircle();
+	*/
 	SwapBuffers(ghdc);
 }
 
+void drawArc2(){
+	const float PI = 3.141592f;
+	GLint circle_points = 1000;
+	glBegin(GL_TRIANGLE_FAN);
+	//for(float angle=0.0f;angle<2.0f * PI; angle = angle+ 0.01f){
+	for(int i=900;i<circle_points;i++){
+		float angle = 2 * PI * i / circle_points;
+		glVertex3f(cos(angle)/4, sin(angle)/4, 0.0f);
+	}
+	glEnd();
+	
+	
+}
 
+void doAdjust1(){
+	void drawCircle(void);
+	void drawCircleT1(void);
+	GLfloat zTransf = -8.0f;
+	//kachara start
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.8f,1.5f,zTransf);
+	glColor3f(1.0f,1.0f,1.0f);
+	drawCircle();
+	
+	
+	
+	///
+	GLfloat xTrans = 0.7f;
+	GLfloat yTrans = 1.5f;
+	for(GLint t=1;t<5;t++){
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(xTrans,yTrans,zTransf);
+	glColor3f(1.0f,1.0f,1.0f);
+	drawCircle();
+	xTrans = xTrans-0.05f;
+	//yTrans = yTrans-0.01f;
+	}
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.34f,1.08f,zTransf);
+	glColor3f(1.0f,1.0f,1.0f);
+	drawCircleT1();
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.27f,0.9f,zTransf);
+	glColor3f(1.0f,1.0f,1.0f);
+	drawCircleT1();
+	
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.4f,1.20f,zTransf);
+	glColor3f(1.0f,1.0f,1.0f);
+	drawCircleT1();
+	//kachara end
+}
+void doAdjust2(){
+	void drawCircle(void);
+	void drawCircleT1(void);
+	GLfloat zTransf = -8.0f;
+	//kachara start
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-0.8f,-1.5f,zTransf);
+	glColor3f(1.0f,1.0f,1.0f);
+	drawCircle();
+	
+	
+	
+	///
+	
+	GLfloat xTrans = 0.7f;
+	GLfloat yTrans = 1.5f;
+	for(GLint t=1;t<5;t++){
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-xTrans,-yTrans,zTransf);
+	glColor3f(1.0f,1.0f,1.0f);
+	drawCircle();
+	xTrans = xTrans-0.05f;
+	//yTrans = yTrans-0.01f;
+	}
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-0.34f,-1.08f,zTransf);
+	glColor3f(1.0f,1.0f,1.0f);
+	drawCircleT1();
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-0.27f,-0.9f,zTransf);
+	glColor3f(1.0f,1.0f,1.0f);
+	drawCircleT1();
+	
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-0.4f,-1.20f,zTransf);
+	glColor3f(1.0f,1.0f,1.0f);
+	drawCircleT1();
+	//kachara end
+}
 void drawArc(){
 	const float PI = 3.141592f;
 	GLint circle_points = 1000;
@@ -385,6 +484,37 @@ void drawLine(){
 	glEnd();
 }
 
+void drawArc1(){
+	const float PI = 3.141592f;
+	GLint circle_points = 1000;
+	glBegin(GL_TRIANGLE_FAN);
+	//for(float angle=0.0f;angle<2.0f * PI; angle = angle+ 0.01f){
+	for(int i=250;i<circle_points;i++){
+		float angle = 2 * PI * i / circle_points;
+		glVertex3f(cos(angle)/2, sin(angle)/2, 0.0f);
+	}
+	glEnd();
+	
+	
+}
+
+void drawLine1(){
+	const float PI = 3.141592f;
+	GLint circle_points = 1000;
+	glBegin(GL_TRIANGLES);
+	int i = 250;
+	float ang = 2 * PI * i / circle_points;
+	glVertex3f(cos(ang)/2,sin(ang)/2,0.0f);
+	
+	ang = 2 * PI * i / circle_points;
+	glVertex3f((cos(ang)+1.0f)/2,sin(ang)/2,0.0f);
+	
+	i=999;
+	ang = 2 * PI * i / circle_points;
+	glVertex3f(cos(ang)/2,sin(ang)/2,0.0f);
+	
+	glEnd();
+}
 
 void drawRect(){
 	glBegin(GL_QUADS);
