@@ -62,10 +62,10 @@ int main(void)
 	
 	//create the window
 	CreateWindow();
-	
+	printf("Created window successfully...\n");
 	//initialize
 	initialize();
-	
+	printf("after initialize...\n");
 	//message loop
 	XEvent event;
 	KeySym keysym;
@@ -179,6 +179,7 @@ void CreateWindow(void)
 				GLX_RED_SIZE,8,
 				GLX_GREEN_SIZE,8,
 				GLX_BLUE_SIZE,8,
+				GLX_ALPHA_SIZE,8,
 				GLX_DEPTH_SIZE,24,
 				GLX_STENCIL_SIZE,8,
 				GLX_DOUBLEBUFFER,True,
@@ -225,7 +226,7 @@ void CreateWindow(void)
 	
 	int bestFrameBufferConfig=-1,worstFrameBufferConfig=-1,bestNumberOfSamples=-1,worstNumberOfSamples=999;
 	printf("Entering the loop\n");
-	for(int i=0;i<iNumFBConfigs;i++)
+	for(i=0;i<iNumFBConfigs;i++)
 	{
 		pTempXVisualInfo=glXGetVisualFromFBConfig(gpDisplay,pGLXFBConfig[i]);
 		if(pTempXVisualInfo)
@@ -253,7 +254,7 @@ void CreateWindow(void)
 	
 	bestGLXFBConfig=pGLXFBConfig[bestFrameBufferConfig];
 	gGLXFBConfig=bestGLXFBConfig;
-	
+	printf("...bestFrameBufferConfig-%d\n",bestFrameBufferConfig);
 	XFree(pGLXFBConfig);
 	
 	gpXVisualInfo=glXGetVisualFromFBConfig(gpDisplay,bestGLXFBConfig);
@@ -365,9 +366,9 @@ void initialize(void)
 {
 	void uninitialize(void);
 	void resize(int,int);
-	
+	printf("entered initialize...\n");
 	glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc) glXGetProcAddressARB((GLubyte *) "glXCreateContextAttribsARB");
-	
+	printf("after creating contextAttribs...\n");
 	/*GLint attribs[]={
 			GLX_CONTEXT_MAJOR_VERSION_ARB,4,
 			GLX_CONTEXT_MINOR_VERSION_ARB,5,
@@ -376,14 +377,14 @@ void initialize(void)
 	};*/
 	GLint attribs[]={
 			GLX_CONTEXT_MAJOR_VERSION_ARB,3,
-			GLX_CONTEXT_MINOR_VERSION_ARB,3,
+			GLX_CONTEXT_MINOR_VERSION_ARB,1,
 			GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
 			0
 	};
 	
-	printf("initialize...");
-	gGLXContext=glXCreateContextAttribsARB(gpDisplay,gGLXFBConfig,0,True,attribs);
 	
+	gGLXContext=glXCreateContextAttribsARB(gpDisplay,gGLXFBConfig,0,True,attribs);
+	printf("after creating context attribs arb...\n");
 	if(!gGLXContext)
 	{
 		GLint attribs[]={
@@ -396,7 +397,7 @@ void initialize(void)
 		gGLXContext=glXCreateContextAttribsARB(gpDisplay,gGLXFBConfig,0,True,attribs);
 	}else
 	{
-		printf("OpenGL Context 4.5 Is Created.\n");
+		printf("OpenGL Context 3.1 Is Created.\n");
 	}
 	
 	if(!glXIsDirect(gpDisplay,gGLXContext))
