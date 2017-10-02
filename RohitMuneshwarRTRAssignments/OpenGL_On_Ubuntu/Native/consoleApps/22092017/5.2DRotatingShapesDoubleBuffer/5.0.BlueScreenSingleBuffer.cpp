@@ -292,7 +292,7 @@ void CreateWindow(void)
 		exit(1);
 	}
 	
-	XStoreName(gpDisplay,gWindow,"First Window - OpenGL - Single Buffer");
+	XStoreName(gpDisplay,gWindow,"First Window - OpenGL - Double Buffer");
 	
 	Atom windowManagerDelete=XInternAtom(gpDisplay,"WM_DELETE_WINDOW",True);
 	XSetWMProtocols(gpDisplay,gWindow,&windowManagerDelete,1);

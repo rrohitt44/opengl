@@ -301,8 +301,8 @@ void initialize(void)
 	glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)glXGetProcAddressARB((GLubyte *)"glXCreateContextAttribsARB");
 	
 	GLint attribs[] = {
-		GLX_CONTEXT_MAJOR_VERSION_ARB,4,
-		GLX_CONTEXT_MINOR_VERSION_ARB,5,
+		GLX_CONTEXT_MAJOR_VERSION_ARB,3,
+		GLX_CONTEXT_MINOR_VERSION_ARB,0,
 		GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
 		0 }; // array must be terminated by 0
 		
@@ -369,7 +369,11 @@ void display(void)
 {
 	//code
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	glBegin(GL_LINES);
+	glColor3f(1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,0.0f,0.0f);
+	glVertex3f(1.0f,0.0f,0.0f);
+	glEnd();
 	glXSwapBuffers(gpDisplay,gWindow);
 }
 
