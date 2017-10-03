@@ -264,7 +264,7 @@ void CreateWindow(void)
 		exit(1);
 	}
 	
-	XStoreName(gpDisplay,gWindow,"OpenGL DB: 2D Rotating Shapes");
+	XStoreName(gpDisplay,gWindow,"OpenGL DB: 3D Rotating Shapes");
 	
 	Atom windowManagerDelete=XInternAtom(gpDisplay,"WM_WINDOW_DELETE",True);
 	XSetWMProtocols(gpDisplay,gWindow,&windowManagerDelete,1);
@@ -382,8 +382,8 @@ void resize(int width,int height)
 void display(void)
 {
 	//function prototypes
-	void drawTriangle(void);
-	void drawRectangle(void);
+	void drawPyramid(void);
+	void drawCube(void);
 	
 	//code
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -391,13 +391,15 @@ void display(void)
 	glLoadIdentity();
 	glTranslatef(-1.5f,0.0f,-6.0f);
 	glRotatef(triangle,0.0f,1.0f,0.0f);
-	drawTriangle();
+	drawPyramid();
 	
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(1.5f,0.0f,-6.0f);
+	glTranslatef(1.5f,0.0f,-7.0f);
 	glRotatef(rectangle,0.0f,1.0f,0.0f);
-	drawRectangle();
+	glRotatef(rectangle,0.0f,0.0f,1.0f);
+	glRotatef(rectangle,1.0f,0.0f,0.0f);
+	drawCube();
 	glXSwapBuffers(gpDisplay,gWindow);
 }
 
@@ -413,6 +415,43 @@ void drawTriangle(void)
 	glEnd();
 }
 
+void drawPyramid(void)
+{
+	glBegin(GL_TRIANGLES);
+	//front
+	glColor3f(1.0f,0.0f,0.0f);
+	glVertex3f(0.0f,1.0f,0.0f);
+	glColor3f(0.0f,1.0f,0.0f);
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	glColor3f(0.0f,0.0f,1.0f);
+	glVertex3f(1.0f,-1.0f,1.0f);
+	
+	//right
+	glColor3f(1.0f,0.0f,0.0f);
+	glVertex3f(0.0f,1.0f,0.0f);
+	glColor3f(0.0f,0.0f,1.0f);
+	glVertex3f(1.0f,-1.0f,1.0f);
+	glColor3f(0.0f,1.0f,0.0f);
+	glVertex3f(1.0f,-1.0f,-1.0f);
+	
+	//back
+	glColor3f(1.0f,0.0f,0.0f);
+	glVertex3f(0.0f,1.0f,0.0f);
+	glColor3f(0.0f,1.0f,0.0f);
+	glVertex3f(1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,0.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	
+	//left
+	glColor3f(1.0f,0.0f,0.0f);
+	glVertex3f(0.0f,1.0f,0.0f);
+	glColor3f(0.0f,0.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,1.0f,0.0f);
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	glEnd();
+}
+
 void drawRectangle(void)
 {
 	glBegin(GL_QUADS);
@@ -424,6 +463,68 @@ void drawRectangle(void)
 	glVertex3f(-1.0f,-1.0f,0.0f);
 	glColor3f(1.0f,1.0f,0.0f);
 	glVertex3f(1.0f,-1.0f,0.0f);
+	glEnd();
+}
+
+void drawCube(void)
+{
+	glBegin(GL_QUADS);
+	//front
+	glColor3f(1.0f,1.0f,0.0f);
+	glVertex3f(1.0f,1.0f,1.0f);
+	
+	glVertex3f(-1.0f,1.0f,1.0f);
+	
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	
+	glVertex3f(1.0f,-1.0f,1.0f);
+	
+	//right
+	glColor3f(1.0f,0.0f,0.0f);
+	glVertex3f(1.0f,1.0f,-1.0f);
+	glVertex3f(1.0f,1.0f,1.0f);
+	glVertex3f(1.0f,-1.0f,1.0f);
+	glVertex3f(1.0f,-1.0f,-1.0f);
+	
+	
+	
+	//back
+	glColor3f(1.0f,1.0f,1.0f);
+	glVertex3f(1.0f,1.0f,-1.0f);
+	glVertex3f(-1.0f,1.0f,-1.0f);
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	glVertex3f(1.0f,-1.0f,-1.0f);
+	
+	
+	
+	
+	
+	//left
+	glColor3f(0.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,1.0f,-1.0f);
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	
+	//top
+	glColor3f(1.0f,0.0f,1.0f);
+	glVertex3f(1.0f,1.0f,-1.0f);
+	glVertex3f(-1.0f,1.0f,-1.0f);
+	glVertex3f(-1.0f,1.0f,1.0f);
+	glVertex3f(1.0f,1.0f,1.0f);
+	
+	
+	
+	
+	
+	
+	
+	//bottom
+	glColor3f(1.0f,1.0f,0.0f);
+	glVertex3f(1.0f,-1.0f,-1.0f);
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	glVertex3f(1.0f,-1.0f,1.0f);
 	glEnd();
 }
 

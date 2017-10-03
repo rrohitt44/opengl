@@ -34,6 +34,10 @@ bool gbFullscreen = false;
 GLfloat triangle=0.0f;
 GLfloat rectangle=0.0f;
 
+int giWindowWidth=800;
+int giWindowHeight=600;
+int giViewportXPos=0;
+int giViewportYPos=0;
 //entry-point function
 int main(int argc, char *argv[])
 {
@@ -46,6 +50,12 @@ int main(int argc, char *argv[])
 	void uninitialize(void);
 	void updateTriangle(void);
 	void updateRectangle(void);
+	
+	//local variables
+	int liWinWidth=giWindowWidth;
+	int liWinHeight=giWindowHeight;
+	GLint liViewportWidth=800;
+	GLint liViewportHeight=600;
 	
 	//code
 	// create log file
@@ -104,6 +114,69 @@ int main(int argc, char *argv[])
 								gbFullscreen=false;
 							}
 							break;
+						case XK_1:
+						giViewportXPos=0;
+						giViewportYPos=giWindowHeight/2;
+						liViewportWidth=giWindowWidth/2;
+						liViewportHeight=giWindowHeight/2;
+						resize(liViewportWidth,liViewportWidth);
+						break;
+					case XK_2:
+						giViewportXPos=giWindowWidth/2;
+						giViewportYPos=giWindowHeight/2;
+						liViewportWidth=giWindowWidth/2;
+						liViewportHeight=giWindowHeight/2;
+						resize(liViewportWidth,liViewportWidth);
+						break;
+					case XK_3:
+						giViewportXPos=0;
+						giViewportYPos=0;
+						liViewportWidth=giWindowWidth/2;
+						liViewportHeight=giWindowHeight/2;
+						resize(liViewportWidth,liViewportWidth);
+						break;
+					case XK_4:
+						giViewportXPos=giWindowWidth/2;
+						giViewportYPos=0;
+						liViewportWidth=giWindowWidth/2;
+						liViewportHeight=giWindowHeight/2;
+						resize(liViewportWidth,liViewportWidth);
+						break;
+					case XK_5:
+						giViewportXPos=0;
+						giViewportYPos=0;
+						liViewportWidth=giWindowWidth/2;
+						liViewportHeight=giWindowHeight;
+						resize(liViewportWidth,liViewportWidth);
+						break;
+					case XK_6:
+						giViewportXPos=giWindowWidth/2;
+						giViewportYPos=0;
+						liViewportWidth=giWindowWidth/2;
+						liViewportHeight=giWindowHeight;
+						resize(liViewportWidth,liViewportWidth);
+						break;
+					case XK_7:
+						giViewportXPos=0;
+						giViewportYPos=giWindowHeight/2;
+						liViewportWidth=giWindowWidth;
+						liViewportHeight=giWindowHeight/2;
+						resize(liViewportWidth,liViewportWidth);
+						break;
+					case XK_8:
+						giViewportXPos=0;
+						giViewportYPos=0;
+						liViewportWidth=giWindowWidth;
+						liViewportHeight=giWindowHeight/2;
+						resize(liViewportWidth,liViewportWidth);
+						break;
+					case XK_9:
+						giViewportXPos=giWindowWidth/4;
+						giViewportYPos=giWindowHeight/4;
+						liViewportWidth=giWindowWidth/2;
+						liViewportHeight=giWindowHeight/2;
+						resize(liViewportWidth,liViewportWidth);
+						break;
 						default:
 							break;
 					}
@@ -139,8 +212,8 @@ int main(int argc, char *argv[])
 					break;
 			}
 		}
-		updateTriangle();
-		updateRectangle();
+		//updateTriangle();
+		//updateRectangle();
 		display();
 	}
 	
@@ -369,7 +442,7 @@ void resize(int width,int height)
 	if(height==0)
 		height=1;
 		
-	glViewport(0,0,(GLsizei)width,(GLsizei)height);
+	glViewport(giViewportXPos,giViewportYPos,(GLsizei)width,(GLsizei)height);
 	/*glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(-50.0f,50.0f,-50.0f,50.0f,-50.0f,50.0f);*/
