@@ -1,0 +1,13 @@
+Compiler command - for creating assembly file
+gcc -S -o hello_world.s hello_world.c
+
+assembler command
+as -o hello_world.o hello_world.s
+
+linker command
+ld -o hello_world -lc -dynamic-linker /lib/ld-linux.so.2 hello_world.o -e main
+
+for 64 bit - linux library is /lib64/ld-linux-x86-64.so.2
+
+
+https://www.cprogramming.com/tutorial/shared-libraries-linux-gcc.html
