@@ -1,0 +1,4 @@
+#include "MyTexture.h"
+
+IDBITMAP_STONEWALL BITMAP StoneWall.bmp
+IDBITMAP_DADA BITMAP minions.bmp
