@@ -21,12 +21,12 @@ HGLRC ghrc = NULL;
 
 GLUquadric *quadric = NULL;
 
-GLfloat light_ambient={0.0f,0.0f,0.0f,1.0f};
-GLfloat light_defused={1.0f,1.0f,1.0f,1.0f};
-GLfloat light_specular={1.0f,1.0f,1.0f,1.0f};
-GLfloat light_position={0.0f,0.0f,1.0f,0.0f};
-GLfloat material_specular={1.0f,1.0f,1.0f,1.0f};
-GLfloat material_shinnyness={50.0f};
+GLfloat light_ambient[]={0.0f,0.0f,0.0f,1.0f};
+GLfloat light_defused[]={1.0f,1.0f,1.0f,1.0f};
+GLfloat light_specular[]={1.0f,1.0f,1.0f,1.0f};
+GLfloat light_position[]={0.0f,0.0f,1.0f,0.0f};
+GLfloat material_specular[]={1.0f,1.0f,1.0f,1.0f};
+GLfloat material_shinnyness[]={50.0f};
 
 bool gbLightMode = false;
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
@@ -38,7 +38,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	TCHAR WinName[] = TEXT("Geometry - Triangle Projection using glTranslate");
 	HWND hwnd;
 	MSG msg;
-	RECT rec1t;
+	RECT rect;
 	//initialize window class
 	wndclass.cbSize = sizeof(WNDCLASSEX);
 	wndclass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC; //change for opengl
@@ -117,6 +117,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
 	void ToggleFullscreen(void);
+	void toggleLightMode(void);
 	void resize(int, int);
 	//void display(void);
 	void uninitialize(void);
@@ -266,11 +267,11 @@ void initialize(){
 	//removed as not needed for double buffering
 	//again added for projection
 	glLightfv(GL_LIGHT0,GL_AMBIENT,light_ambient);
-glLightfv(GL_LIGHT0,GL_DEFUSED,light_defused);
+glLightfv(GL_LIGHT0,GL_DIFFUSE,light_defused);
 glLightfv(GL_LIGHT0,GL_SPECULAR,light_specular);
-glLightfv(GL_LIGHT0,GL_POSSITION,light_position);
+glLightfv(GL_LIGHT0,GL_POSITION,light_position);
 glMaterialfv(GL_LIGHT0,GL_SPECULAR,material_specular);
-glMaterialfv(GL_LIGHT0,GL_SHINNYNESS,material_shinnyness);
+glMaterialfv(GL_LIGHT0,GL_SHININESS,material_shinnyness);
 	resize(WIN_WIDTH,WIN_HEIGHT);
 }
 
@@ -279,7 +280,7 @@ void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(0.0f,0.0f,-1.0f);
+	glTranslatef(0.0f,0.0f,-3.0f);
 	//DrawTriangle();
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	quadric = gluNewQuadric();
