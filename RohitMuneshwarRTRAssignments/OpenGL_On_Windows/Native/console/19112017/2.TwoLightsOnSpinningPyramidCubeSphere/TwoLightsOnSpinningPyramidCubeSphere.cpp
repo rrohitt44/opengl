@@ -24,14 +24,33 @@ HGLRC ghrc = NULL;
 
 GLfloat gfAnglePira = 0.0f;
 GLfloat gfAngleCube = 0.0f;
+GLfloat gfAngleSphere = 0.0f;
+GLUquadric *quadric = NULL;
 
+//light0
+GLfloat light0_ambient[]={0.0f,0.0f,0.0f,0.0f};
+GLfloat light0_defused[]={1.0f,0.0f,0.0f,0.0f};
+GLfloat light0_specular[]={1.0f,0.0f,0.0f,0.0f};
+GLfloat light0_position[]={2.0f,1.0f,1.0f,0.0f};
 
-GLfloat light_ambient[]={0.5f,0.5f,0.5f,1.0f};
-GLfloat light_defused[]={1.0f,1.0f,1.0f,1.0f};
-GLfloat light_specular[]={1.0f,1.0f,1.0f,1.0f};
-GLfloat light_position[]={0.0f,0.0f,1.0f,0.0f};
+//light1
+GLfloat light1_ambient[]={0.0f,0.0f,0.0f,0.0f};
+GLfloat light1_defused[]={0.0f,0.0f,1.0f,0.0f};
+GLfloat light1_specular[]={0.0f,0.0f,1.0f,0.0f};
+GLfloat light1_position[]={-2.0f,1.0f,1.0f,0.0f};
+
+//material
+GLfloat material_ambient[]={0.0f,0.0f,0.0f,0.0f};
+GLfloat material_defused[]={1.0f,1.0f,1.0f,1.0f};
+GLfloat material_specular[]={1.0f,1.0f,1.0f,1.0f};
+GLfloat material_shininess[]={50.0f};
+
 
 bool gbLightMode = false;
+GLboolean gbPyramidMode = GL_TRUE;
+GLboolean gbCubeMode = GL_FALSE;
+GLboolean gbSphereMode = GL_FALSE;
+
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
 	void initialize(void);
@@ -40,7 +59,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	void updateAngle(void);
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("Lights - Rotating Shapes");
+	TCHAR WinName[] = TEXT("Lights - Two Lights On Spinning Pyramid,Cube,Sphere");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
@@ -122,14 +141,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 }
 
 void updateAngle(){
-	gfAnglePira = gfAnglePira + 0.1f;
+	gfAnglePira = gfAnglePira + 0.01f;
 	if(gfAnglePira>=360.0f){
 		gfAnglePira = 0.0f;
 	}
 	
-	gfAngleCube = gfAngleCube + 0.1f;
+	gfAngleCube = gfAngleCube + 0.01f;
 	if(gfAngleCube>=360.0f){
 		gfAngleCube = 0.0f;
+	}
+	
+	gfAngleSphere = gfAngleSphere + 0.01f;
+	if(gfAngleSphere>=360.0f){
+		gfAngleSphere = 0.0f;
 	}
 }
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
@@ -172,8 +196,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
 				case 0x46: //F or f key
 						ToggleFullscreen();
 				break;
-				case 0x4C://L
+				case 0x4C: //L
 					toggleLightMode();
+				break;
+				case 0x43: //C
+					gbCubeMode = GL_TRUE;
+					gbPyramidMode = GL_FALSE;
+					gbSphereMode = GL_FALSE;
+				break;
+				case 0x50: //P
+					gbCubeMode = GL_FALSE;
+					gbPyramidMode = GL_TRUE;
+					gbSphereMode = GL_FALSE;
+				break;
+				case 0x53: //S
+					gbCubeMode = GL_FALSE;
+					gbPyramidMode = GL_FALSE;
+					gbSphereMode = GL_TRUE;
 				break;
 			}
 		break;
@@ -279,10 +318,24 @@ void initialize(){
 	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	//removed as not needed for double buffering
 	
-	glLightfv(GL_LIGHT0,GL_AMBIENT,light_ambient);
-glLightfv(GL_LIGHT0,GL_DIFFUSE,light_defused);
-glLightfv(GL_LIGHT0,GL_SPECULAR,light_specular);
-glLightfv(GL_LIGHT0,GL_POSITION,light_position);
+	glLightfv(GL_LIGHT0,GL_AMBIENT,light0_ambient);
+	glLightfv(GL_LIGHT0,GL_DIFFUSE,light0_defused);
+	glLightfv(GL_LIGHT0,GL_SPECULAR,light0_specular);
+	glLightfv(GL_LIGHT0,GL_POSITION,light0_position);
+	
+	glLightfv(GL_LIGHT1,GL_AMBIENT,light1_ambient);
+	glLightfv(GL_LIGHT1,GL_DIFFUSE,light1_defused);
+	glLightfv(GL_LIGHT1,GL_SPECULAR,light1_specular);
+	glLightfv(GL_LIGHT1,GL_POSITION,light1_position);
+	
+	glMaterialfv(GL_FRONT,GL_AMBIENT,material_ambient);
+	glMaterialfv(GL_FRONT,GL_DIFFUSE,material_defused);
+	glMaterialfv(GL_FRONT,GL_SPECULAR,material_specular);
+	glMaterialfv(GL_FRONT,GL_SHININESS,material_shininess);
+	
+	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT1);
+	
 	resize(WIN_WIDTH,WIN_HEIGHT);
 }
 
@@ -290,28 +343,34 @@ void display(){
 	void DrawPyramid(void);
 	void DrawCube(void);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //GL_DEPTH_BUFFER_BIT added for 3D support
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(-1.5f,0.0f,-6.0f);
-	glRotatef(gfAnglePira, 0.0f,1.0f,0.0f);
-	DrawPyramid();
 	
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
-	glTranslatef(1.5f,0.0f,-6.0f);
-	glScalef(0.75f,0.75f,0.75f);
-	glRotatef(gfAngleCube, 1.0f,1.0f,1.0f);
-	
-	DrawCube();
-	
+	if(gbPyramidMode==GL_TRUE){
+		glTranslatef(-1.5f,0.0f,-6.0f);
+		glRotatef(gfAnglePira, 0.0f,1.0f,0.0f);
+		DrawPyramid();
+	}else if(gbCubeMode==GL_TRUE){
+		glTranslatef(1.5f,0.0f,-6.0f);
+		glScalef(0.75f,0.75f,0.75f);
+		glRotatef(gfAngleCube, 0.0f,1.0f,0.0f);
+		DrawCube();
+	}else if(gbSphereMode==GL_TRUE){
+		glTranslatef(0.0f,0.0f,-3.0f);
+		glRotatef(gfAngleSphere,1.0f,0.0,0.0f);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		quadric = gluNewQuadric();
+		glColor3f(1.0f,1.0f,0.0f);
+		gluSphere(quadric, 0.75f,30,30);
+	}
 	SwapBuffers(ghdc);
 }
 
 void DrawPyramid(){
 	glBegin(GL_TRIANGLES);
-	glNormal3f(0.0f,0.0f,1.0f);
 	//front
+	glNormal3f(0.0f,0.447214f,0.894427f);
 	glColor3f(1.0f,0.0f,0.0f); //red
 	glVertex3f(0.0f,1.0f,0.0f); //appex
 	glColor3f(0.0f,1.0f,0.0f); //green
@@ -320,7 +379,7 @@ void DrawPyramid(){
 	glVertex3f(1.0f,-1.0f,1.0f);
 	
 	//right
-	glNormal3f(1.0f,0.0f,0.0f);
+	glNormal3f(0.894427f,0.447214f,0.0f);
 	glColor3f(1.0f,0.0f,0.0f); //red
 	glVertex3f(0.0f,1.0f,0.0f); //appex
 	glColor3f(0.0f,0.0f,1.0f); //blue
@@ -329,7 +388,7 @@ void DrawPyramid(){
 	glVertex3f(1.0f,-1.0f,-1.0f);
 	
 	//back
-	glNormal3f(0.0f,0.0f,-1.0f);
+	glNormal3f(0.0f,0.447214f,-0.0894427f);
 	glColor3f(1.0f,0.0f,0.0f); //red
 	glVertex3f(0.0f,1.0f,0.0f); //appex
 	glColor3f(0.0f,1.0f,0.0f); //green
@@ -338,7 +397,7 @@ void DrawPyramid(){
 	glVertex3f(-1.0f,-1.0f,-1.0f);
 	
 	//left
-	glNormal3f(-1.0f,0.0f,0.0f);
+	glNormal3f(-0.894427f,0.447214f,0.0f);
 	glColor3f(1.0f,0.0f,0.0f); //red
 	glVertex3f(0.0f,1.0f,0.0f); //appex
 	glColor3f(0.0f,0.0f,1.0f); //blue
@@ -421,6 +480,9 @@ void uninitialize(){
 		ShowCursor(TRUE);
 	}
 	
+	if(quadric!=NULL){
+		quadric=NULL;
+	}
 	wglMakeCurrent(NULL,NULL);
 	wglDeleteContext(ghrc);
 	ghrc = NULL;

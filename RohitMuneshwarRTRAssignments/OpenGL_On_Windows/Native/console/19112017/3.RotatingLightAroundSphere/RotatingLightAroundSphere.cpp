@@ -22,17 +22,36 @@ bool gbEscapePressed = false;
 HDC ghdc = NULL;
 HGLRC ghrc = NULL;
 
-GLfloat gfAnglePira = 0.0f;
-GLfloat gfAngleCube = 0.0f;
-
+GLfloat gfAngleSphere = 0.0f;
 GLUquadric *quadric = NULL;
-GLfloat light_ambient[]={0.5f,0.5f,0.5f,1.0f};
-GLfloat light_defused[]={1.0f,1.0f,1.0f,1.0f};
-GLfloat light_specular[]={1.0f,1.0f,1.0f,1.0f};
-GLfloat light_position[]={0.0f,0.0f,1.0f,0.0f};
-GLfloat material_specular[]={1.0f,1.0f,1.0f,1.0f};
-GLfloat material_shinnyness[]={50.0f};
 
+//light0
+GLfloat light0_ambient[]={0.0f,0.0f,0.0f,0.0f};
+GLfloat light0_defused[]={1.0f,0.0f,0.0f,0.0f};
+GLfloat light0_specular[]={1.0f,0.0f,0.0f,0.0f};
+GLfloat light0_position[]={0.0f,0.0f,0.0f,0.0f};
+
+//light1
+GLfloat light1_ambient[]={0.0f,0.0f,0.0f,0.0f};
+GLfloat light1_defused[]={0.0f,1.0f,0.0f,0.0f};
+GLfloat light1_specular[]={0.0f,1.0f,0.0f,0.0f};
+GLfloat light1_position[]={0.0f,0.0f,0.0f,0.0f};
+
+//light2
+GLfloat light2_ambient[]={0.0f,0.0f,0.0f,0.0f};
+GLfloat light2_defused[]={0.0f,0.0f,1.0f,0.0f};
+GLfloat light2_specular[]={0.0f,0.0f,1.0f,0.0f};
+GLfloat light2_position[]={0.0f,0.0f,0.0f,0.0f};
+
+//material
+GLfloat material_ambient[]={0.0f,0.0f,0.0f,0.0f};
+GLfloat material_defused[]={1.0f,1.0f,1.0f,1.0f};
+GLfloat material_specular[]={1.0f,1.0f,1.0f,1.0f};
+//GLfloat material_shininess[]={50.0f};
+
+GLfloat angleRedLight = 0.0f;
+GLfloat angleGreenLight = 0.0f;
+GLfloat angleBlueLight = 0.0f;
 bool gbLightMode = false;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
@@ -42,7 +61,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	void updateAngle(void);
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("Lights - Sphere");
+	TCHAR WinName[] = TEXT("Lights - Rotating Lights Around Sphere");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
@@ -124,14 +143,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 }
 
 void updateAngle(){
-	gfAnglePira = gfAnglePira + 0.1f;
-	if(gfAnglePira>=360.0f){
-		gfAnglePira = 0.0f;
+	
+	gfAngleSphere = gfAngleSphere + 0.01f;
+	if(gfAngleSphere>=360.0f){
+		gfAngleSphere = 0.0f;
 	}
 	
-	gfAngleCube = gfAngleCube + 0.1f;
-	if(gfAngleCube>=360.0f){
-		gfAngleCube = 0.0f;
+	angleRedLight = angleRedLight+0.1f;
+	if(angleRedLight>=360){
+		angleRedLight = 0.0f;
+	}
+	
+	angleGreenLight = angleGreenLight+0.1f;
+	if(angleGreenLight>=360){
+		angleGreenLight = 0.0f;
+	}
+	
+	angleBlueLight = angleBlueLight+0.1f;
+	if(angleBlueLight>=360){
+		angleBlueLight = 0.0f;
 	}
 }
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
@@ -174,9 +204,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
 				case 0x46: //F or f key
 						ToggleFullscreen();
 				break;
-				case 0x4C://L
+				case 0x4C: //L
 					toggleLightMode();
 				break;
+				
 			}
 		break;
 		case WM_DESTROY:
@@ -281,27 +312,73 @@ void initialize(){
 	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	//removed as not needed for double buffering
 	
-	glLightfv(GL_LIGHT0,GL_AMBIENT,light_ambient);
-	glLightfv(GL_LIGHT0,GL_DIFFUSE,light_defused);
-	glLightfv(GL_LIGHT0,GL_SPECULAR,light_specular);
-	glLightfv(GL_LIGHT0,GL_POSITION,light_position);
+	glLightfv(GL_LIGHT0,GL_AMBIENT,light0_ambient);
+	glLightfv(GL_LIGHT0,GL_DIFFUSE,light0_defused);
+	glLightfv(GL_LIGHT0,GL_SPECULAR,light0_specular);
+	//glLightfv(GL_LIGHT0,GL_POSITION,light0_position);
+	
+	glLightfv(GL_LIGHT1,GL_AMBIENT,light1_ambient);
+	glLightfv(GL_LIGHT1,GL_DIFFUSE,light1_defused);
+	glLightfv(GL_LIGHT1,GL_SPECULAR,light1_specular);
+	//glLightfv(GL_LIGHT1,GL_POSITION,light1_position);
+	
+	glLightfv(GL_LIGHT2,GL_AMBIENT,light2_ambient);
+	glLightfv(GL_LIGHT2,GL_DIFFUSE,light2_defused);
+	glLightfv(GL_LIGHT2,GL_SPECULAR,light2_specular);
+	//glLightfv(GL_LIGHT2,GL_POSITION,light2_position);
+	
+	glMaterialfv(GL_FRONT,GL_AMBIENT,material_ambient);
+	glMaterialfv(GL_FRONT,GL_DIFFUSE,material_defused);
 	glMaterialfv(GL_FRONT,GL_SPECULAR,material_specular);
-	glMaterialfv(GL_FRONT,GL_SHININESS,material_shinnyness);
+	//glMaterialfv(GL_FRONT,GL_SHININESS,material_shininess);
+	
 	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT1);
+	glEnable(GL_LIGHT2);
+	
 	resize(WIN_WIDTH,WIN_HEIGHT);
 }
 
 void display(){
-	void DrawTriangle(void);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //GL_DEPTH_BUFFER_BIT added for 3D support
+	
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(0.0f,0.0f,-3.0f);
-	//DrawTriangle();
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	quadric = gluNewQuadric();
-	glColor3f(1.0f,1.0f,0.0f);
-	gluSphere(quadric, 0.75f,30,30);
+	
+	gluLookAt(0,0,0.1,
+				0,0,0,
+				0,1,0);
+				
+	glPushMatrix();
+	glRotatef(angleRedLight,1,0,0);
+	light0_position[1] = angleRedLight;
+	glLightfv(GL_LIGHT0,GL_POSITION,light0_position);
+	glPopMatrix();
+	
+	glPushMatrix();
+	glRotatef(angleGreenLight,0,1,0);
+	light1_position[0]=angleGreenLight;
+	glLightfv(GL_LIGHT1,GL_POSITION,light1_position);
+	glPopMatrix();
+	
+	glPushMatrix();
+	glRotatef(angleBlueLight,0,0,1);
+	light2_position[0]=angleBlueLight;
+	glLightfv(GL_LIGHT2,GL_POSITION,light2_position);
+	glPopMatrix();
+	
+	glPushMatrix();
+		glTranslatef(0.0f,0.0f,-3.0f);
+		//glRotatef(gfAngleSphere,1.0f,0.0,0.0f);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		quadric = gluNewQuadric();
+		glColor3f(1.0f,1.0f,0.0f);
+		gluSphere(quadric, 0.75f,30,30);
+	glPopMatrix();
+	
+	glPopMatrix();
+	
 	SwapBuffers(ghdc);
 }
 
@@ -325,6 +402,9 @@ void uninitialize(){
 		ShowCursor(TRUE);
 	}
 	
+	if(quadric!=NULL){
+		quadric=NULL;
+	}
 	wglMakeCurrent(NULL,NULL);
 	wglDeleteContext(ghrc);
 	ghrc = NULL;

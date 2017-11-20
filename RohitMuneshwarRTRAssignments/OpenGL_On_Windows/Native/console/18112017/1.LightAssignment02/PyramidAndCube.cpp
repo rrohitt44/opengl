@@ -25,14 +25,13 @@ HGLRC ghrc = NULL;
 GLfloat gfAnglePira = 0.0f;
 GLfloat gfAngleCube = 0.0f;
 
-GLUquadric *quadric = NULL;
+
 GLfloat light_ambient[]={0.5f,0.5f,0.5f,1.0f};
 GLfloat light_defused[]={1.0f,1.0f,1.0f,1.0f};
 GLfloat light_specular[]={1.0f,1.0f,1.0f,1.0f};
 GLfloat light_position[]={0.0f,0.0f,1.0f,0.0f};
 GLfloat material_specular[]={1.0f,1.0f,1.0f,1.0f};
-GLfloat material_shinnyness[]={50.0f};
-
+GLfloat material_shininess[]={50.0f};
 bool gbLightMode = false;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
@@ -42,7 +41,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	void updateAngle(void);
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("Lights - Sphere");
+	TCHAR WinName[] = TEXT("Lights - Rotating Shapes");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
@@ -124,12 +123,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 }
 
 void updateAngle(){
-	gfAnglePira = gfAnglePira + 0.1f;
+	gfAnglePira = gfAnglePira + 0.01f;
 	if(gfAnglePira>=360.0f){
 		gfAnglePira = 0.0f;
 	}
 	
-	gfAngleCube = gfAngleCube + 0.1f;
+	gfAngleCube = gfAngleCube + 0.01f;
 	if(gfAngleCube>=360.0f){
 		gfAngleCube = 0.0f;
 	}
@@ -174,7 +173,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
 				case 0x46: //F or f key
 						ToggleFullscreen();
 				break;
-				case 0x4C://L
+				case 0x4C: //L
 					toggleLightMode();
 				break;
 			}
@@ -285,24 +284,127 @@ void initialize(){
 	glLightfv(GL_LIGHT0,GL_DIFFUSE,light_defused);
 	glLightfv(GL_LIGHT0,GL_SPECULAR,light_specular);
 	glLightfv(GL_LIGHT0,GL_POSITION,light_position);
+	
 	glMaterialfv(GL_FRONT,GL_SPECULAR,material_specular);
-	glMaterialfv(GL_FRONT,GL_SHININESS,material_shinnyness);
+	glMaterialfv(GL_FRONT,GL_SHININESS,material_shininess);
+	
 	glEnable(GL_LIGHT0);
 	resize(WIN_WIDTH,WIN_HEIGHT);
 }
 
 void display(){
-	void DrawTriangle(void);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	void DrawPyramid(void);
+	void DrawCube(void);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //GL_DEPTH_BUFFER_BIT added for 3D support
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(0.0f,0.0f,-3.0f);
-	//DrawTriangle();
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	quadric = gluNewQuadric();
-	glColor3f(1.0f,1.0f,0.0f);
-	gluSphere(quadric, 0.75f,30,30);
+	glTranslatef(-1.5f,0.0f,-6.0f);
+	glRotatef(gfAnglePira, 0.0f,1.0f,0.0f);
+	DrawPyramid();
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	
+	glTranslatef(1.5f,0.0f,-6.0f);
+	glScalef(0.75f,0.75f,0.75f);
+	glRotatef(gfAngleCube, 1.0f,1.0f,1.0f);
+	
+	DrawCube();
+	
 	SwapBuffers(ghdc);
+}
+
+void DrawPyramid(){
+	glBegin(GL_TRIANGLES);
+	glNormal3f(0.0f,0.0f,1.0f);
+	//front
+	glColor3f(1.0f,0.0f,0.0f); //red
+	glVertex3f(0.0f,1.0f,0.0f); //appex
+	glColor3f(0.0f,1.0f,0.0f); //green
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	glColor3f(0.0f,0.0f,1.0f); //blue
+	glVertex3f(1.0f,-1.0f,1.0f);
+	
+	//right
+	glNormal3f(1.0f,0.0f,0.0f);
+	glColor3f(1.0f,0.0f,0.0f); //red
+	glVertex3f(0.0f,1.0f,0.0f); //appex
+	glColor3f(0.0f,0.0f,1.0f); //blue
+	glVertex3f(1.0f,-1.0f,1.0f);
+	glColor3f(0.0f,1.0f,0.0f); //green
+	glVertex3f(1.0f,-1.0f,-1.0f);
+	
+	//back
+	glNormal3f(0.0f,0.0f,-1.0f);
+	glColor3f(1.0f,0.0f,0.0f); //red
+	glVertex3f(0.0f,1.0f,0.0f); //appex
+	glColor3f(0.0f,1.0f,0.0f); //green
+	glVertex3f(1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,0.0f,1.0f); //blue
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	
+	//left
+	glNormal3f(-1.0f,0.0f,0.0f);
+	glColor3f(1.0f,0.0f,0.0f); //red
+	glVertex3f(0.0f,1.0f,0.0f); //appex
+	glColor3f(0.0f,0.0f,1.0f); //blue
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,1.0f,0.0f); //green
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	glEnd();
+}
+
+void DrawCube(){
+	glBegin(GL_QUADS);
+	
+	//front
+	glNormal3f(0.0f,0.0f,1.0f);
+	glColor3f(0.0f,0.0f,1.0f); //blue
+	glVertex3f(1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	glVertex3f(1.0f,-1.0f,1.0f);
+	
+	//right
+	glNormal3f(1.0f,0.0f,0.0f);
+	glColor3f(1.0f,0.0f,1.0f); //magenta
+	glVertex3f(1.0f,1.0f,-1.0f);
+	glVertex3f(1.0f,1.0f,1.0f);
+	glVertex3f(1.0f,-1.0f,1.0f);
+	glVertex3f(1.0f,-1.0f,-1.0f);
+	
+	//back
+	glNormal3f(0.0f,0.0f,-1.0f);
+	glColor3f(0.0f,1.0f,1.0f); //cyan
+	glVertex3f(1.0f,1.0f,-1.0f);
+	glVertex3f(-1.0f,1.0f,-1.0f);
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	glVertex3f(1.0f,-1.0f,-1.0f);
+	
+	//left
+	glNormal3f(-1.0f,0.0f,0.0f);
+	glColor3f(1.0f,1.0f,0.0f); //yellow
+	glVertex3f(-1.0f,1.0f,-1.0f);
+	glVertex3f(-1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	
+	//top
+	glNormal3f(0.0f,1.0f,0.0f);
+	glColor3f(1.0f,0.0f,0.0f); //red
+	glVertex3f(1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,1.0f,1.0f);
+	glVertex3f(-1.0f,1.0f,-1.0f);
+	glVertex3f(1.0f,1.0f,-1.0f);
+	
+	//bottom
+	glNormal3f(0.0f,-1.0f,0.0f);
+	glColor3f(0.0f,1.0f,0.0f); //green
+	glVertex3f(1.0f,-1.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,1.0f);
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	glVertex3f(1.0f,-1.0f,-1.0f);
+	glEnd();
 }
 
 void resize(int width,int height){
