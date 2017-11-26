@@ -1,0 +1,1 @@
+g++ -o programname programname.cpp -lX11 -lGL -lGLU

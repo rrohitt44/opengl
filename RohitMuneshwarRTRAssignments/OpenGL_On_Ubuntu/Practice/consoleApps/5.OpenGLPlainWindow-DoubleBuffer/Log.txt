@@ -1,0 +1,16 @@
+Log File Successfully Created.
+10 Matching FB Configs Found.
+Matching FrameBuffer Config=0 : Visual ID=700: SAMPLE_BUFFERS=0 : SAMPLES=10
+Matching FrameBuffer Config=1 : Visual ID=c60: SAMPLE_BUFFERS=0 : SAMPLES=10
+Matching FrameBuffer Config=2 : Visual ID=841: SAMPLE_BUFFERS=2 : SAMPLES=10
+Matching FrameBuffer Config=3 : Visual ID=da1: SAMPLE_BUFFERS=2 : SAMPLES=10
+Matching FrameBuffer Config=4 : Visual ID=861: SAMPLE_BUFFERS=4 : SAMPLES=10
+Matching FrameBuffer Config=5 : Visual ID=dc1: SAMPLE_BUFFERS=4 : SAMPLES=10
+Matching FrameBuffer Config=6 : Visual ID=901: SAMPLE_BUFFERS=8 : SAMPLES=10
+Matching FrameBuffer Config=7 : Visual ID=e61: SAMPLE_BUFFERS=8 : SAMPLES=10
+Matching FrameBuffer Config=8 : Visual ID=981: SAMPLE_BUFFERS=16 : SAMPLES=10
+Matching FrameBuffer Config=9 : Visual ID=ee1: SAMPLE_BUFFERS=16 : SAMPLES=10
+Choosen Visual ID=0x152
+OpenGL Context 4.5 is created.
+Direct GLX rendering context obtained.
+Log File Is Successfully Closed.

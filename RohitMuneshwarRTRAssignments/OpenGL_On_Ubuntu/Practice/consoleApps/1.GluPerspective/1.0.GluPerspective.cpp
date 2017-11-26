@@ -388,17 +388,17 @@ void display(void)
 	
 	//code
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-	//glTranslatef(-1.5f,0.0f,-6.0f);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-1.5f,0.0f,-6.0f);
 	//glRotatef(triangle,0.0f,1.0f,0.0f);
 	drawTriangle();
-	//drawTriangle25();
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-	//glTranslatef(1.5f,0.0f,-6.0f);
+	drawTriangle25();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(1.5f,0.0f,-6.0f);
 	//glRotatef(rectangle,0.0f,1.0f,0.0f);
-	//drawRectangle();
+	drawRectangle();
 	glXSwapBuffers(gpDisplay,gWindow);
 }
 
