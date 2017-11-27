@@ -373,7 +373,7 @@ void display(){
 		//glRotatef(gfAngleSphere,1.0f,0.0,0.0f);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		quadric = gluNewQuadric();
-		glColor3f(1.0f,1.0f,0.0f);
+		//glColor3f(1.0f,1.0f,0.0f);
 		gluSphere(quadric, 0.75f,30,30);
 	glPopMatrix();
 	

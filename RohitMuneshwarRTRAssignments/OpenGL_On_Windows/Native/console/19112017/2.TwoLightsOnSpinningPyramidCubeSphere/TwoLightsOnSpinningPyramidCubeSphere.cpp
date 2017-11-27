@@ -361,7 +361,7 @@ void display(){
 		glRotatef(gfAngleSphere,1.0f,0.0,0.0f);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		quadric = gluNewQuadric();
-		glColor3f(1.0f,1.0f,0.0f);
+		//glColor3f(1.0f,1.0f,0.0f);
 		gluSphere(quadric, 0.75f,30,30);
 	}
 	SwapBuffers(ghdc);
@@ -371,38 +371,38 @@ void DrawPyramid(){
 	glBegin(GL_TRIANGLES);
 	//front
 	glNormal3f(0.0f,0.447214f,0.894427f);
-	glColor3f(1.0f,0.0f,0.0f); //red
+	//glColor3f(1.0f,0.0f,0.0f); //red
 	glVertex3f(0.0f,1.0f,0.0f); //appex
-	glColor3f(0.0f,1.0f,0.0f); //green
+	//glColor3f(0.0f,1.0f,0.0f); //green
 	glVertex3f(-1.0f,-1.0f,1.0f);
-	glColor3f(0.0f,0.0f,1.0f); //blue
+	//glColor3f(0.0f,0.0f,1.0f); //blue
 	glVertex3f(1.0f,-1.0f,1.0f);
 	
 	//right
 	glNormal3f(0.894427f,0.447214f,0.0f);
-	glColor3f(1.0f,0.0f,0.0f); //red
+	//glColor3f(1.0f,0.0f,0.0f); //red
 	glVertex3f(0.0f,1.0f,0.0f); //appex
-	glColor3f(0.0f,0.0f,1.0f); //blue
+	//glColor3f(0.0f,0.0f,1.0f); //blue
 	glVertex3f(1.0f,-1.0f,1.0f);
-	glColor3f(0.0f,1.0f,0.0f); //green
+	//glColor3f(0.0f,1.0f,0.0f); //green
 	glVertex3f(1.0f,-1.0f,-1.0f);
 	
 	//back
 	glNormal3f(0.0f,0.447214f,-0.0894427f);
-	glColor3f(1.0f,0.0f,0.0f); //red
+	//glColor3f(1.0f,0.0f,0.0f); //red
 	glVertex3f(0.0f,1.0f,0.0f); //appex
-	glColor3f(0.0f,1.0f,0.0f); //green
+	//glColor3f(0.0f,1.0f,0.0f); //green
 	glVertex3f(1.0f,-1.0f,-1.0f);
-	glColor3f(0.0f,0.0f,1.0f); //blue
+	//glColor3f(0.0f,0.0f,1.0f); //blue
 	glVertex3f(-1.0f,-1.0f,-1.0f);
 	
 	//left
 	glNormal3f(-0.894427f,0.447214f,0.0f);
-	glColor3f(1.0f,0.0f,0.0f); //red
+	//glColor3f(1.0f,0.0f,0.0f); //red
 	glVertex3f(0.0f,1.0f,0.0f); //appex
-	glColor3f(0.0f,0.0f,1.0f); //blue
+	//glColor3f(0.0f,0.0f,1.0f); //blue
 	glVertex3f(-1.0f,-1.0f,-1.0f);
-	glColor3f(0.0f,1.0f,0.0f); //green
+	//glColor3f(0.0f,1.0f,0.0f); //green
 	glVertex3f(-1.0f,-1.0f,1.0f);
 	glEnd();
 }
@@ -412,7 +412,7 @@ void DrawCube(){
 	
 	//front
 	glNormal3f(0.0f,0.0f,1.0f);
-	glColor3f(0.0f,0.0f,1.0f); //blue
+	//glColor3f(0.0f,0.0f,1.0f); //blue
 	glVertex3f(1.0f,1.0f,1.0f);
 	glVertex3f(-1.0f,1.0f,1.0f);
 	glVertex3f(-1.0f,-1.0f,1.0f);
@@ -420,7 +420,7 @@ void DrawCube(){
 	
 	//right
 	glNormal3f(1.0f,0.0f,0.0f);
-	glColor3f(1.0f,0.0f,1.0f); //magenta
+	//glColor3f(1.0f,0.0f,1.0f); //magenta
 	glVertex3f(1.0f,1.0f,-1.0f);
 	glVertex3f(1.0f,1.0f,1.0f);
 	glVertex3f(1.0f,-1.0f,1.0f);
@@ -428,7 +428,7 @@ void DrawCube(){
 	
 	//back
 	glNormal3f(0.0f,0.0f,-1.0f);
-	glColor3f(0.0f,1.0f,1.0f); //cyan
+	//glColor3f(0.0f,1.0f,1.0f); //cyan
 	glVertex3f(1.0f,1.0f,-1.0f);
 	glVertex3f(-1.0f,1.0f,-1.0f);
 	glVertex3f(-1.0f,-1.0f,-1.0f);
@@ -436,7 +436,7 @@ void DrawCube(){
 	
 	//left
 	glNormal3f(-1.0f,0.0f,0.0f);
-	glColor3f(1.0f,1.0f,0.0f); //yellow
+	//glColor3f(1.0f,1.0f,0.0f); //yellow
 	glVertex3f(-1.0f,1.0f,-1.0f);
 	glVertex3f(-1.0f,1.0f,1.0f);
 	glVertex3f(-1.0f,-1.0f,1.0f);
@@ -444,7 +444,7 @@ void DrawCube(){
 	
 	//top
 	glNormal3f(0.0f,1.0f,0.0f);
-	glColor3f(1.0f,0.0f,0.0f); //red
+	//glColor3f(1.0f,0.0f,0.0f); //red
 	glVertex3f(1.0f,1.0f,1.0f);
 	glVertex3f(-1.0f,1.0f,1.0f);
 	glVertex3f(-1.0f,1.0f,-1.0f);
@@ -452,7 +452,7 @@ void DrawCube(){
 	
 	//bottom
 	glNormal3f(0.0f,-1.0f,0.0f);
-	glColor3f(0.0f,1.0f,0.0f); //green
+	//glColor3f(0.0f,1.0f,0.0f); //green
 	glVertex3f(1.0f,-1.0f,1.0f);
 	glVertex3f(-1.0f,-1.0f,1.0f);
 	glVertex3f(-1.0f,-1.0f,-1.0f);
