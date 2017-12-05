@@ -1,0 +1,20 @@
+Log File opened successfully.
+
+Entered in CreateWindow()
+10 Matching FB Configs Found.
+Matching Framebuffer Config=0 : Visual ID=0x112 : SAMPLE_BUFFERS=0 : SAMPLES=0
+Matching Framebuffer Config=1 : Visual ID=0x198 : SAMPLE_BUFFERS=0 : SAMPLES=0
+Matching Framebuffer Config=2 : Visual ID=0x132 : SAMPLE_BUFFERS=1 : SAMPLES=2
+Matching Framebuffer Config=3 : Visual ID=0x218 : SAMPLE_BUFFERS=1 : SAMPLES=2
+Matching Framebuffer Config=4 : Visual ID=0x134 : SAMPLE_BUFFERS=1 : SAMPLES=4
+Matching Framebuffer Config=5 : Visual ID=0x220 : SAMPLE_BUFFERS=1 : SAMPLES=4
+Matching Framebuffer Config=6 : Visual ID=0x144 : SAMPLE_BUFFERS=1 : SAMPLES=8
+Matching Framebuffer Config=7 : Visual ID=0x230 : SAMPLE_BUFFERS=1 : SAMPLES=8
+Matching Framebuffer Config=8 : Visual ID=0x152 : SAMPLE_BUFFERS=1 : SAMPLES=16
+Matching Framebuffer Config=9 : Visual ID=0x238 : SAMPLE_BUFFERS=1 : SAMPLES=16
+Chosen Visual ID=0x152
+Exiting from the CreateWindow()
+Entered in the Initialize()
+OpenGL 4.5 context is created successfully.
+
+Exiting from the Initialize()

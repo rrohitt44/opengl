@@ -1,0 +1,8 @@
+Log File opened successfully.
+
+Entered in CreateWindow()
+Exiting from the CreateWindow()
+Entered in the Initialize()
+OpenGL 4.5 context is created successfully.
+
+Exiting from the Initialize()
