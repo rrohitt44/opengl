@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 	int winWidth;
 	int winHeight;
 	bool bDone=false;
-	
+	char ascii[26];
 	while(bDone==false)
 	{
 		while(XPending(gpDisplay))
@@ -103,19 +103,28 @@ int main(int argc, char *argv[])
 							}
 							break;
 						default:
-						case XK_S:
-							shoulder=(shoulder+3)%360;
-							break;
-						case XK_s:
-							shoulder=(shoulder-3)%360;
-							break;
-						case XK_E:
-							elbow=(elbow+3)%360;
-							break;
-						case XK_e:
-							elbow=(elbow-3)%360;
 							break;
 					}
+					
+					XLookupString(&event.xkey, ascii, sizeof(ascii),NULL,NULL);	
+					switch(ascii[0])
+					{
+					case 'E'://E
+						elbow = (elbow + 3) % 360;
+						break;
+					case 'e': // e
+						elbow = (elbow - 3) % 360;
+						break;
+					case 'S': // S
+						shoulder = (shoulder + 3) % 360;
+						break;
+					case 's': // s
+						shoulder = (shoulder - 3) % 360;
+						break;
+					default:
+						break;
+					}
+				
 					break;
 				case ButtonPress:
 					switch(event.xbutton.button)
