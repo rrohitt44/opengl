@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 	int winWidth;
 	int winHeight;
 	bool bDone=false;
-	
+	char ascii[26];
 	while(bDone==false)
 	{
 		while(XPending(gpDisplay))
@@ -103,19 +103,27 @@ int main(int argc, char *argv[])
 							}
 							break;
 						default:
-						case XK_D:
-							day=(day+6)%360;
-							break;
-						case XK_d:
-							day=(day-6)%360;
-							break;
-						case XK_Y:
-							year=(year+3)%360;
-							break;
-						case XK_y:
-							year=(year-3)%360;
+						
 							break;
 					}
+					
+					XLookupString(&event.xkey, ascii, sizeof(ascii),NULL,NULL);	
+					switch(ascii[0]){
+					case 'D':
+						day = (day + 6 ) % 360;
+						break;
+					case 'd':
+						day = (day - 6 ) % 360;
+						break;
+					case 'Y':
+						year = (year + 3 ) % 360;
+						break;
+					case 'y':
+						year = (year - 3 ) % 360;
+						break;
+					default:
+					break;
+				}
 					break;
 				case ButtonPress:
 					switch(event.xbutton.button)
