@@ -1,0 +1,1 @@
+Compile : cl /EHsc CheckBoard.cpp /link user32.lib gdi32.lib rohit.res

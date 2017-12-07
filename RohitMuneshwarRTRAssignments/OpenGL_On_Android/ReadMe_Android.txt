@@ -1,0 +1,1 @@
+02122017 - steps for installation of Android on Windows
