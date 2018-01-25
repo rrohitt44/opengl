@@ -102,7 +102,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 				if(gbEscapePressed == true){
 					gbDone = true;
 				}
-				glewInit();
+				
 				display(); //for double buffer
 			}
 		}
@@ -253,15 +253,23 @@ void initialize(){
 	}
 	
 	//code to find the supported opengl extensions
-	//program is not working with this code...so it is commented
-	/*GLint num;
+	GLenum glew_error = glewInit();
+	if(glew_error != GLEW_OK)
+	{
+		wglDeleteContext(ghrc);
+		ghrc = NULL;
+		ReleaseDC(ghwnd, ghdc);
+		ghdc = NULL;
+	}
+	
+	GLint num;
 	glGetIntegerv(GL_NUM_EXTENSIONS,&num);
 	for(int i=0;i<num;i++)
 	{
-		fprintf(g_fp_logfile,"%s\n", glGetStringi(GL_EXTENSIONS,num));
-	}*/
+		fprintf(g_fp_logfile,"%s\n", glGetStringi(GL_EXTENSIONS,i));
+	}
 
-	fprintf(g_fp_logfile,"%s\n", glGetString(GL_EXTENSIONS));
+	//fprintf(g_fp_logfile,"%s\n", glGetString(GL_EXTENSIONS));
 	
 	glClearColor(0.0f,0.0f,1.0f,0.0f);
 	//removed as not needed for double buffering
