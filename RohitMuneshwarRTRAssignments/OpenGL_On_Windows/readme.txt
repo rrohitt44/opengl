@@ -4,8 +4,6 @@ cl.exe /c /EHsc abc.cpp
 link:
 link.exe abc.obj user32.lib gdi32.lib
 
-Compile and Link at one go:
-cl.exe /EHsc abc.cpp /link user32.lib gdi32.lib ab.res
 
 GLUT-
 compile:
@@ -14,6 +12,22 @@ cl.exe /c /EHsc /I C:\freeglut\include ConcentricTrianglesStructure.cpp
 link:
 link.exe ogl.obj /LIBPATH:C:\freeglut\lib freeglut.lib /SUBSYSTEM:CONSOLE
 
+GLEW-
+compile:
+cl.exe /c /EHsc /I C:\glew\include program.cpp
+
+link:
+link.exe program.obj /LIBPATH:C:\glew\lib\Release\Win32 glew32.lib
+
+
+Compile and Link at one go:
+cl.exe /EHsc abc.cpp /link user32.lib gdi32.lib ab.res
+
+
+
+
+
+====================================================================
 
 
 Assignments:
@@ -99,3 +113,6 @@ single revolving cube without using any transformation functions like loadIdenti
 Solar system
 
 Robotic Hand
+
+
+07012017 - find which extensions my graphics project supports
