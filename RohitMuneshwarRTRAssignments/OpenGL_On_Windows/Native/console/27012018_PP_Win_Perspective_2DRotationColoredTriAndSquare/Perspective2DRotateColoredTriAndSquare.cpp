@@ -1,4 +1,4 @@
- #include<windows.h>
+#include<windows.h>
 #include<stdio.h> //for file IO
 #include<gl/glew.h> //for GLSL extensions
 #include<gl/GL.h>
@@ -45,20 +45,27 @@ GLuint gVertexShaderObject;
 GLuint gFragmentShaderObject;
 GLuint gShaderProgramObject;
 
-GLuint gVao;
-GLuint gVbo;
+GLuint gVao_triangle;
+GLuint gVbo_triangle_position;
+GLuint gVbo_triangle_color;
+GLuint gVao_square;
+GLuint gVbo_square_position;
+GLuint gVbo_square_color;
 GLuint gMVPUniform;
 
-mat4 gOrthographicProjectionMatrix;
+GLfloat angleTri=0.0f;
+GLfloat angleSquare=0.0f;
+
+mat4 gPerspectiveProjectionMatrix;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
 	void initialize(void);
 	void uninitialize(void);
 	void display(void);
-	
+	void updateAngle(void);
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("Orthographic Window using Programmable Pipeline");
+	TCHAR WinName[] = TEXT("Perspective Rotate Colored 2D Geometry using Programmable Pipeline");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
@@ -139,7 +146,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 				if(gbEscapePressed == true){
 					gbDone = true;
 				}
-				
+				updateAngle();
 				display(); //for double buffer
 			}
 		}
@@ -147,6 +154,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	
 	uninitialize();
 	return ((int) msg.wParam);
+}
+
+void updateAngle(void){
+	if(angleTri>=360.0f)
+	{
+		angleTri=0.0f;
+	}
+
+	if(angleSquare>=360.0f)
+	{
+		angleSquare=0.0f;
+	}	
+	
+	angleTri=angleTri+0.1f;
+	angleSquare=angleSquare+0.1f;
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
@@ -322,10 +344,13 @@ void initialize(){
 				"#version 440							"\
 				"\n										"\
 				"in vec4 vPosition;						"\
+				"in vec4 vColor;"\
 				"uniform mat4 u_mvp_matrix;				"\
+				"out vec4 out_color;"\
 				"void main(void)						"\
 				"{										"\
 				"gl_Position = u_mvp_matrix * vPosition;	"\
+				"out_color=vColor;"\
 				"}										";
 				
 				
@@ -364,10 +389,11 @@ void initialize(){
 	const GLchar *fragmentShaderSourceCode =
 				"#version 440" \
 				"\n" \
+				"in vec4 out_color;"\
 				"out vec4 FragColor;" \
 				"void main(void)" \
 				"{" \
-				"FragColor=vec4(1.0,1.0,1.0,1.0);" \
+				"FragColor=out_color;" \
 				"}";
 				
 	glShaderSource(gFragmentShaderObject, 1, (const GLchar**)&fragmentShaderSourceCode,NULL);
@@ -438,22 +464,76 @@ void initialize(){
 	//vertices, colors, shader attribs, vbo, vao initializations
 	const GLfloat triangleVertices[]=
 	{
-		0.0f,50.0f,0.0f, //apex
-		-50.0f,-50.0f,0.0f, // lb
-		50.0f,-50.0f,0.0f //rb
+		0.0f,1.0f,0.0f, //apex
+		-1.0f,-1.0f,0.0f, // lb
+		1.0f,-1.0f,0.0f //rb
 	};
 	
-	glGenVertexArrays(1, &gVao);
-	glBindVertexArray(gVao);
+	const GLfloat triangleColor[] =
+	{
+		1.0f,0.0f,0.0f,
+		0.0f,1.0f,0.0f,
+		0.0f,0.0f,1.0f
+	};
 	
-	glGenBuffers(1, &gVbo);
-	glBindBuffer(GL_ARRAY_BUFFER, gVbo);
+	const GLfloat squareVertices[]=
+	{
+		1.0f,1.0f,0.0f,
+		-1.0f,1.0f,0.0f,
+		-1.0f,-1.0f,0.0f,
+		1.0f,-1.0f,0.0f
+	};
+	
+	const GLfloat squareColorVertices[]=
+	{
+		1.0f,0.0f,0.0f,
+		0.0f,1.0f,0.0f,
+		0.0f,0.0f,1.0f,
+		1.0f,0.0f,0.0f
+	};
+	
+	glGenVertexArrays(1, &gVao_triangle);
+	glBindVertexArray(gVao_triangle);
+	
+	glGenBuffers(1, &gVbo_triangle_position);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_triangle_position);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(VDG_ATTRIBUTE_VERTEX, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	
 	glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	//color wala vbo
+	glGenBuffers(1,&gVbo_triangle_color);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_triangle_color);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(triangleColor), triangleColor, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_COLOR, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_COLOR);
+	glBindBuffer(GL_ARRAY_BUFFER,0);
+	
+	glBindVertexArray(0);
+	
+	//square
+	glGenVertexArrays(1,&gVao_square);
+	glBindVertexArray(gVao_square);
+	
+	glGenBuffers(1,&gVbo_square_position);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_square_position);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(squareVertices),squareVertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_VERTEX,3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glGenBuffers(1,&gVbo_square_color);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_square_color);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(squareColorVertices),squareColorVertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_COLOR,3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_COLOR);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	
+	
 	glBindVertexArray(0);
 	
 	glShadeModel(GL_SMOOTH);
@@ -471,12 +551,12 @@ void initialize(){
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	
 	//we will always cull back faces for better performance
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	
-	glClearColor(0.0f,0.0f,1.0f,0.0f);
+	glClearColor(0.0f,0.0f,0.0f,0.0f);
 	
 	//set orthographicMatrix to identify matrix
-	gOrthographicProjectionMatrix = mat4::identity();
+	gPerspectiveProjectionMatrix = mat4::identity();
 	
 	//resize
 	resize(WIN_WIDTH,WIN_HEIGHT);
@@ -492,21 +572,40 @@ void display(){
 	//set modelview & modelviewprojection matrices to identity
 	mat4 modelViewMatrix = mat4::identity();
 	mat4 modelViewProjectionMatrix=mat4::identity();
+	mat4 rotationMatrix=mat4::identity();
 	
-	//multiply the modelview and orthographic matrix to get modelviewprojection matrix
-	modelViewProjectionMatrix = gOrthographicProjectionMatrix * modelViewMatrix; //order is important
+	//translate
+	modelViewMatrix = translate(-1.5f,0.0f,-6.0f);
+	rotationMatrix = vmath::rotate(angleTri,0.0f,1.0f,0.0f);
+	modelViewMatrix = modelViewMatrix * rotationMatrix;
+	//multiply the modelview and perspective matrix to get modelviewprojection matrix
+	modelViewProjectionMatrix = gPerspectiveProjectionMatrix * modelViewMatrix; //order is important
 	
 	//pass the above modelViewProjectionMatrix to the vertex shader in 'u_mvp_matrix' shader variable
 	//whose position value we already calculated in initWithFrame() by using glGetUniformLocation()
 	glUniformMatrix4fv(gMVPUniform, 1, GL_FALSE, modelViewProjectionMatrix);
 	
 	//bind vao
-	glBindVertexArray(gVao);
+	glBindVertexArray(gVao_triangle);
 	
 	//draw, either by glDrawTriangles() or glDrawArrays() or glDrawElements()
 	glDrawArrays(GL_TRIANGLES, 0,3);
 	
 	//unbind vao
+	glBindVertexArray(0);
+	
+	
+	//draw square
+	modelViewMatrix = mat4::identity();
+	modelViewProjectionMatrix=mat4::identity();
+	rotationMatrix=mat4::identity();
+	modelViewMatrix=translate(1.5f, 0.0f,-7.0f);
+	rotationMatrix = vmath::rotate(angleSquare,1.0f,0.0f,0.0f);
+	modelViewMatrix = modelViewMatrix * rotationMatrix;
+	modelViewProjectionMatrix=gPerspectiveProjectionMatrix*modelViewMatrix;
+	glUniformMatrix4fv(gMVPUniform, 1, GL_FALSE, modelViewProjectionMatrix);
+	glBindVertexArray(gVao_square);
+	glDrawArrays(GL_QUADS, 0,4);
 	glBindVertexArray(0);
 	
 	//stop using OpenGL program object
@@ -522,13 +621,14 @@ void resize(int width,int height){
 	glViewport(0,0,(GLsizei)width,(GLsizei)height);
 	
 	//glOrtho(left,right,bottom,top,near,far);
-	if(width<=height)
+	/*if(width<=height)
 	{
 			gOrthographicProjectionMatrix = ortho(-100.0f,100.0f, (-100.0f * (height/width)), (100.0f * (height/width)), -100.0f, 100.0f);
 	}else
 	{
 		gOrthographicProjectionMatrix = ortho(-100.0f, 100.0f, (-100.0f * (width/height)), (100.0f * (width/height)), -100.0f, 100.0f);
-	}
+	}*/
+	gPerspectiveProjectionMatrix = perspective(45.0f, (GLfloat)width/(GLfloat)height, 0.1f,100.0f);
 }
 
 void uninitialize(){
@@ -541,17 +641,41 @@ void uninitialize(){
 	}
 	
 	//destroy vao
-	if(gVao)
+	if(gVao_triangle)
 	{
-		glDeleteVertexArrays(1, &gVao);
-		gVao = 0;
+		glDeleteVertexArrays(1, &gVao_triangle);
+		gVao_triangle = 0;
+	}
+	
+	if(gVao_square)
+	{
+		glDeleteVertexArrays(1, &gVao_square);
+		gVao_square = 0;
 	}
 	
 	//destroy vbo
-	if(gVbo)
+	if(gVbo_triangle_position)
 	{
-		glDeleteBuffers(1, &gVbo);
-		gVbo = 0;
+		glDeleteBuffers(1, &gVbo_triangle_position);
+		gVbo_triangle_position = 0;
+	}
+	
+	if(gVbo_triangle_color)
+	{
+		glDeleteBuffers(1, &gVbo_triangle_color);
+		gVbo_triangle_color = 0;
+	}
+	
+	if(gVbo_square_position)
+	{
+		glDeleteBuffers(1, &gVbo_square_position);
+		gVbo_square_position = 0;
+	}
+	
+	if(gVbo_square_color)
+	{
+		glDeleteBuffers(1, &gVbo_square_color);
+		gVbo_square_color = 0;
 	}
 	
 	//detach vertex shader from shader program object

@@ -1,4 +1,4 @@
- #include<windows.h>
+#include<windows.h>
 #include<stdio.h> //for file IO
 #include<gl/glew.h> //for GLSL extensions
 #include<gl/GL.h>
@@ -49,7 +49,7 @@ GLuint gVao;
 GLuint gVbo;
 GLuint gMVPUniform;
 
-mat4 gOrthographicProjectionMatrix;
+mat4 gPerspectiveProjectionMatrix;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
 	void initialize(void);
@@ -58,7 +58,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("Orthographic Window using Programmable Pipeline");
+	TCHAR WinName[] = TEXT("Perspective Triangle using Programmable Pipeline");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
@@ -438,9 +438,9 @@ void initialize(){
 	//vertices, colors, shader attribs, vbo, vao initializations
 	const GLfloat triangleVertices[]=
 	{
-		0.0f,50.0f,0.0f, //apex
-		-50.0f,-50.0f,0.0f, // lb
-		50.0f,-50.0f,0.0f //rb
+		0.0f,1.0f,0.0f, //apex
+		-1.0f,-1.0f,0.0f, // lb
+		1.0f,-1.0f,0.0f //rb
 	};
 	
 	glGenVertexArrays(1, &gVao);
@@ -476,7 +476,7 @@ void initialize(){
 	glClearColor(0.0f,0.0f,1.0f,0.0f);
 	
 	//set orthographicMatrix to identify matrix
-	gOrthographicProjectionMatrix = mat4::identity();
+	gPerspectiveProjectionMatrix = mat4::identity();
 	
 	//resize
 	resize(WIN_WIDTH,WIN_HEIGHT);
@@ -493,8 +493,11 @@ void display(){
 	mat4 modelViewMatrix = mat4::identity();
 	mat4 modelViewProjectionMatrix=mat4::identity();
 	
-	//multiply the modelview and orthographic matrix to get modelviewprojection matrix
-	modelViewProjectionMatrix = gOrthographicProjectionMatrix * modelViewMatrix; //order is important
+	//translate
+	modelViewMatrix = translate(0.0f,0.0f,-3.0f);
+	
+	//multiply the modelview and perspective matrix to get modelviewprojection matrix
+	modelViewProjectionMatrix = gPerspectiveProjectionMatrix * modelViewMatrix; //order is important
 	
 	//pass the above modelViewProjectionMatrix to the vertex shader in 'u_mvp_matrix' shader variable
 	//whose position value we already calculated in initWithFrame() by using glGetUniformLocation()
@@ -522,13 +525,14 @@ void resize(int width,int height){
 	glViewport(0,0,(GLsizei)width,(GLsizei)height);
 	
 	//glOrtho(left,right,bottom,top,near,far);
-	if(width<=height)
+	/*if(width<=height)
 	{
 			gOrthographicProjectionMatrix = ortho(-100.0f,100.0f, (-100.0f * (height/width)), (100.0f * (height/width)), -100.0f, 100.0f);
 	}else
 	{
 		gOrthographicProjectionMatrix = ortho(-100.0f, 100.0f, (-100.0f * (width/height)), (100.0f * (width/height)), -100.0f, 100.0f);
-	}
+	}*/
+	gPerspectiveProjectionMatrix = perspective(45.0f, (GLfloat)width/(GLfloat)height, 0.1f,100.0f);
 }
 
 void uninitialize(){

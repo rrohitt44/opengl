@@ -1,15 +1,14 @@
- #include<windows.h>
+#include<Windows.h>
 #include<stdio.h> //for file IO
-#include<gl/glew.h> //for GLSL extensions
+#include<GL/glew.h> //for GLSL extensions
 #include<gl/GL.h>
 
 #include "vmath.h"
 
-#pragma comment(lib,"glew32.lib")
-#pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
-
+#pragma comment(lib, "glew32.lib")
+#pragma comment(lib, "opengl32.lib")
 
 #define WIN_WIDTH 800
 #define WIN_HEIGHT 600
@@ -45,12 +44,6 @@ GLuint gVertexShaderObject;
 GLuint gFragmentShaderObject;
 GLuint gShaderProgramObject;
 
-GLuint gVao;
-GLuint gVbo;
-GLuint gMVPUniform;
-
-mat4 gOrthographicProjectionMatrix;
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
 	void initialize(void);
 	void uninitialize(void);
@@ -58,20 +51,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("Orthographic Window using Programmable Pipeline");
+	TCHAR WinName[] = TEXT("Window using Programmable Pipeline");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
-	
-	if(fopen_s(&g_fp_logfile,"ppLog.txt","w")!=0)
-	{
-		MessageBox(NULL,TEXT("Log File Can Not Be Created\nExitting..."),TEXT("Error"),MB_OK | MB_TOPMOST | MB_ICONSTOP);
-		uninitialize();
-	}else
-	{
-		fprintf(g_fp_logfile,"\nLog file is opened successfully...\n");
-	}
-	
 	//initialize window class
 	wndclass.cbSize = sizeof(WNDCLASSEX);
 	wndclass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC; //change for opengl
@@ -145,8 +128,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 		}
 	}
 	
-	uninitialize();
-	return ((int) msg.wParam);
+	uninitialize(); //opengl
+	return (int) msg.wParam;
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
@@ -253,11 +236,15 @@ void initialize(){
 	void resize(int,int);
 	void uninitialize(void);
 	
+	if(fopen_s(&g_fp_logfile,"ppLog.txt","w")!=0)
+	{
+		MessageBox(NULL,TEXT("Log File Can Not Be Created\nExitting..."),TEXT("Error"),MB_OK | MB_TOPMOST | MB_ICONSTOP);
+		uninitialize();
+	}
+	fprintf(g_fp_logfile,"\nLog file is opened successfully...\n");
+	
 	PIXELFORMATDESCRIPTOR pfd;
 	int iPixelFormatIndex;
-	
-	ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR));
-	
 	//initialization of pfd
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
@@ -268,7 +255,6 @@ void initialize(){
 	pfd.cGreenBits = 8;
 	pfd.cBlueBits = 8;
 	pfd.cAlphaBits = 8;
-	pfd.cDepthBits=32;
 	
 	ghdc = GetDC(ghwnd);
 	iPixelFormatIndex = ChoosePixelFormat(ghdc, &pfd);
@@ -295,7 +281,7 @@ void initialize(){
 		ghdc = NULL;
 	}
 	
-	//GLEW initialization code for GLSL
+	//code to find the supported opengl extensions
 	GLenum glew_error = glewInit();
 	if(glew_error != GLEW_OK)
 	{
@@ -311,50 +297,14 @@ void initialize(){
 	
 	//provide source code to shader
 	const GLchar *vertexShaderSourceCode =
-				/*"#version 440" \
-				"\n" \
-				"in vec4 vPosition;" \
-				"uniform mat4 u_mvp_matrix;" \
-				"void main(void)" \
-				"{" \
-				"gl_Position=u_mvp_matrix * vPosition;" \
-				"}";*/
-				"#version 440							"\
-				"\n										"\
-				"in vec4 vPosition;						"\
-				"uniform mat4 u_mvp_matrix;				"\
-				"void main(void)						"\
-				"{										"\
-				"gl_Position = u_mvp_matrix * vPosition;	"\
-				"}										";
-				
+				"void main(void)"\
+				"{"\
+				"}";
 				
 	glShaderSource(gVertexShaderObject, 1, (const GLchar**)&vertexShaderSourceCode,NULL);
-	fprintf(g_fp_logfile,"Actual shadig language version is %s\n",glGetString(GL_SHADING_LANGUAGE_VERSION));
+	
 	//compile shader
 	glCompileShader(gVertexShaderObject);
-	
-	GLint iInfoLogLength=0;
-	GLint iShaderCompileStatus=0;
-	char *szInfoLog=NULL;
-	glGetShaderiv(gVertexShaderObject, GL_COMPILE_STATUS, &iShaderCompileStatus);
-	if(iShaderCompileStatus==GL_FALSE)
-	{
-		glGetShaderiv(gVertexShaderObject, GL_INFO_LOG_LENGTH, &iInfoLogLength);
-		if(iInfoLogLength > 0)
-		{
-			szInfoLog=(char *)malloc(iInfoLogLength);
-			if(szInfoLog!=NULL)
-			{
-				GLsizei written;
-				glGetShaderInfoLog(gVertexShaderObject, iInfoLogLength, &written, szInfoLog);
-				fprintf(g_fp_logfile, "vertex shader compilation log: %s\n", szInfoLog);
-				free(szInfoLog);
-				uninitialize();
-				exit(0);
-			}
-		}
-	}
 	
 	//FRAGMENT SHADER
 	//create shader
@@ -362,40 +312,14 @@ void initialize(){
 	
 	//provide source code to shader
 	const GLchar *fragmentShaderSourceCode =
-				"#version 440" \
-				"\n" \
-				"out vec4 FragColor;" \
-				"void main(void)" \
-				"{" \
-				"FragColor=vec4(1.0,1.0,1.0,1.0);" \
+				"void main(void)"\
+				"{"\
 				"}";
 				
 	glShaderSource(gFragmentShaderObject, 1, (const GLchar**)&fragmentShaderSourceCode,NULL);
 	
 	//compile shader
 	glCompileShader(gFragmentShaderObject);
-	//reinitialize 
-	 iInfoLogLength = 0;
-	 iShaderCompileStatus = 0;
-	 szInfoLog = NULL;
-	glGetShaderiv(gFragmentShaderObject, GL_COMPILE_STATUS, &iShaderCompileStatus);
-	if(iShaderCompileStatus==GL_FALSE)
-	{
-		glGetShaderiv(gFragmentShaderObject, GL_INFO_LOG_LENGTH, &iInfoLogLength);
-		if(iInfoLogLength>0)
-		{
-			szInfoLog=(char *)malloc(iInfoLogLength);
-			if(szInfoLog!=NULL)
-			{
-				GLsizei written;
-				glGetShaderInfoLog(gFragmentShaderObject, iInfoLogLength, &written, szInfoLog);
-				fprintf(g_fp_logfile,"Fragment Shader Compilation Log: %s\n", szInfoLog);
-				free(szInfoLog);
-				uninitialize();
-				exit(0);
-			}
-		}
-	}
 	
 	//SHADER PROGRAM
 	//create
@@ -407,54 +331,8 @@ void initialize(){
 	//attach fragment shader to shader program
 	glAttachShader(gShaderProgramObject,gFragmentShaderObject);
 	
-	//pre-link binding of shader program object with vertex shader position attribute
-	glBindAttribLocation(gShaderProgramObject, VDG_ATTRIBUTE_VERTEX,"vPosition");
-	
 	//link shader
 	glLinkProgram(gShaderProgramObject);
-	GLint iShaderProgramLinkStatus=0;
-	glGetProgramiv(gShaderProgramObject, GL_LINK_STATUS, &iShaderProgramLinkStatus);
-	if(iShaderProgramLinkStatus==GL_FALSE)
-	{
-		glGetProgramiv(gShaderProgramObject, GL_INFO_LOG_LENGTH, &iInfoLogLength);
-		if(iInfoLogLength>0)
-		{
-			szInfoLog=(char *)malloc(iInfoLogLength);
-			if(szInfoLog!=NULL)
-			{
-				GLsizei written;
-				glGetProgramInfoLog(gShaderProgramObject, iInfoLogLength, &written, szInfoLog);
-				fprintf(g_fp_logfile, "Shader Program Link Log: %s\n", szInfoLog);
-				free(szInfoLog);
-				uninitialize();
-				exit(0);
-			}
-		}
-	}
-	
-	//get MVP uniform location
-	gMVPUniform = glGetUniformLocation(gShaderProgramObject, "u_mvp_matrix");
-	
-	//vertices, colors, shader attribs, vbo, vao initializations
-	const GLfloat triangleVertices[]=
-	{
-		0.0f,50.0f,0.0f, //apex
-		-50.0f,-50.0f,0.0f, // lb
-		50.0f,-50.0f,0.0f //rb
-	};
-	
-	glGenVertexArrays(1, &gVao);
-	glBindVertexArray(gVao);
-	
-	glGenBuffers(1, &gVbo);
-	glBindBuffer(GL_ARRAY_BUFFER, gVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(VDG_ATTRIBUTE_VERTEX, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	
-	glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
 	
 	glShadeModel(GL_SMOOTH);
 	
@@ -475,39 +353,17 @@ void initialize(){
 	
 	glClearColor(0.0f,0.0f,1.0f,0.0f);
 	
-	//set orthographicMatrix to identify matrix
-	gOrthographicProjectionMatrix = mat4::identity();
-	
 	//resize
 	resize(WIN_WIDTH,WIN_HEIGHT);
 }
 
 void display(){
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // | GL_STENCIL_BUFFER add kelyawar output disat nhi.... why?
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	//start using OpenGL program object
 	glUseProgram(gShaderProgramObject);
 	
 	//OpenGL drawing
-	//set modelview & modelviewprojection matrices to identity
-	mat4 modelViewMatrix = mat4::identity();
-	mat4 modelViewProjectionMatrix=mat4::identity();
-	
-	//multiply the modelview and orthographic matrix to get modelviewprojection matrix
-	modelViewProjectionMatrix = gOrthographicProjectionMatrix * modelViewMatrix; //order is important
-	
-	//pass the above modelViewProjectionMatrix to the vertex shader in 'u_mvp_matrix' shader variable
-	//whose position value we already calculated in initWithFrame() by using glGetUniformLocation()
-	glUniformMatrix4fv(gMVPUniform, 1, GL_FALSE, modelViewProjectionMatrix);
-	
-	//bind vao
-	glBindVertexArray(gVao);
-	
-	//draw, either by glDrawTriangles() or glDrawArrays() or glDrawElements()
-	glDrawArrays(GL_TRIANGLES, 0,3);
-	
-	//unbind vao
-	glBindVertexArray(0);
 	
 	//stop using OpenGL program object
 	glUseProgram(0);
@@ -520,15 +376,6 @@ void resize(int width,int height){
 		height = 1;
 	}
 	glViewport(0,0,(GLsizei)width,(GLsizei)height);
-	
-	//glOrtho(left,right,bottom,top,near,far);
-	if(width<=height)
-	{
-			gOrthographicProjectionMatrix = ortho(-100.0f,100.0f, (-100.0f * (height/width)), (100.0f * (height/width)), -100.0f, 100.0f);
-	}else
-	{
-		gOrthographicProjectionMatrix = ortho(-100.0f, 100.0f, (-100.0f * (width/height)), (100.0f * (width/height)), -100.0f, 100.0f);
-	}
 }
 
 void uninitialize(){
@@ -538,20 +385,6 @@ void uninitialize(){
 		SetWindowPlacement(ghwnd,&wpPrev);
 		SetWindowPos(ghwnd,HWND_TOP,0,0,0,0,SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_FRAMECHANGED);
 		ShowCursor(TRUE);
-	}
-	
-	//destroy vao
-	if(gVao)
-	{
-		glDeleteVertexArrays(1, &gVao);
-		gVao = 0;
-	}
-	
-	//destroy vbo
-	if(gVbo)
-	{
-		glDeleteBuffers(1, &gVbo);
-		gVbo = 0;
 	}
 	
 	//detach vertex shader from shader program object

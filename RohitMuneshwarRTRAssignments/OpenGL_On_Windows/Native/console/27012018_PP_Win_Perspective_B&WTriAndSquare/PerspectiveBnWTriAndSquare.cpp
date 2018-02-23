@@ -1,4 +1,4 @@
- #include<windows.h>
+#include<windows.h>
 #include<stdio.h> //for file IO
 #include<gl/glew.h> //for GLSL extensions
 #include<gl/GL.h>
@@ -45,11 +45,13 @@ GLuint gVertexShaderObject;
 GLuint gFragmentShaderObject;
 GLuint gShaderProgramObject;
 
-GLuint gVao;
-GLuint gVbo;
+GLuint gVao_triangle;
+GLuint gVbo_triangle;
+GLuint gVao_square;
+GLuint gVbo_square;
 GLuint gMVPUniform;
 
-mat4 gOrthographicProjectionMatrix;
+mat4 gPerspectiveProjectionMatrix;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
 	void initialize(void);
@@ -58,7 +60,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("Orthographic Window using Programmable Pipeline");
+	TCHAR WinName[] = TEXT("Perspective 2D Geometry using Programmable Pipeline");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
@@ -438,22 +440,43 @@ void initialize(){
 	//vertices, colors, shader attribs, vbo, vao initializations
 	const GLfloat triangleVertices[]=
 	{
-		0.0f,50.0f,0.0f, //apex
-		-50.0f,-50.0f,0.0f, // lb
-		50.0f,-50.0f,0.0f //rb
+		0.0f,1.0f,0.0f, //apex
+		-1.0f,-1.0f,0.0f, // lb
+		1.0f,-1.0f,0.0f //rb
 	};
 	
-	glGenVertexArrays(1, &gVao);
-	glBindVertexArray(gVao);
+	const GLfloat squareVertices[]=
+	{
+		1.0f,1.0f,0.0f,
+		-1.0f,1.0f,0.0f,
+		-1.0f,-1.0f,0.0f,
+		1.0f,-1.0f,0.0f
+	};
 	
-	glGenBuffers(1, &gVbo);
-	glBindBuffer(GL_ARRAY_BUFFER, gVbo);
+	glGenVertexArrays(1, &gVao_triangle);
+	glBindVertexArray(gVao_triangle);
+	
+	glGenBuffers(1, &gVbo_triangle);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_triangle);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(VDG_ATTRIBUTE_VERTEX, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	
 	glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	
+	//square
+	glGenVertexArrays(1,&gVao_square);
+	glBindVertexArray(gVao_square);
+	
+	glGenBuffers(1,&gVbo_square);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_square);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(squareVertices),squareVertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_VERTEX,3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
 	glBindVertexArray(0);
 	
 	glShadeModel(GL_SMOOTH);
@@ -476,7 +499,7 @@ void initialize(){
 	glClearColor(0.0f,0.0f,1.0f,0.0f);
 	
 	//set orthographicMatrix to identify matrix
-	gOrthographicProjectionMatrix = mat4::identity();
+	gPerspectiveProjectionMatrix = mat4::identity();
 	
 	//resize
 	resize(WIN_WIDTH,WIN_HEIGHT);
@@ -493,20 +516,34 @@ void display(){
 	mat4 modelViewMatrix = mat4::identity();
 	mat4 modelViewProjectionMatrix=mat4::identity();
 	
-	//multiply the modelview and orthographic matrix to get modelviewprojection matrix
-	modelViewProjectionMatrix = gOrthographicProjectionMatrix * modelViewMatrix; //order is important
+	//translate
+	modelViewMatrix = translate(-1.5f,0.0f,-6.0f);
+	
+	//multiply the modelview and perspective matrix to get modelviewprojection matrix
+	modelViewProjectionMatrix = gPerspectiveProjectionMatrix * modelViewMatrix; //order is important
 	
 	//pass the above modelViewProjectionMatrix to the vertex shader in 'u_mvp_matrix' shader variable
 	//whose position value we already calculated in initWithFrame() by using glGetUniformLocation()
 	glUniformMatrix4fv(gMVPUniform, 1, GL_FALSE, modelViewProjectionMatrix);
 	
 	//bind vao
-	glBindVertexArray(gVao);
+	glBindVertexArray(gVao_triangle);
 	
 	//draw, either by glDrawTriangles() or glDrawArrays() or glDrawElements()
 	glDrawArrays(GL_TRIANGLES, 0,3);
 	
 	//unbind vao
+	glBindVertexArray(0);
+	
+	
+	//draw square
+	modelViewMatrix = mat4::identity();
+	modelViewProjectionMatrix=mat4::identity();
+	modelViewMatrix=translate(1.5f, 0.0f,-7.0f);
+	modelViewProjectionMatrix=gPerspectiveProjectionMatrix*modelViewMatrix;
+	glUniformMatrix4fv(gMVPUniform, 1, GL_FALSE, modelViewProjectionMatrix);
+	glBindVertexArray(gVao_square);
+	glDrawArrays(GL_QUADS, 0,4);
 	glBindVertexArray(0);
 	
 	//stop using OpenGL program object
@@ -522,13 +559,14 @@ void resize(int width,int height){
 	glViewport(0,0,(GLsizei)width,(GLsizei)height);
 	
 	//glOrtho(left,right,bottom,top,near,far);
-	if(width<=height)
+	/*if(width<=height)
 	{
 			gOrthographicProjectionMatrix = ortho(-100.0f,100.0f, (-100.0f * (height/width)), (100.0f * (height/width)), -100.0f, 100.0f);
 	}else
 	{
 		gOrthographicProjectionMatrix = ortho(-100.0f, 100.0f, (-100.0f * (width/height)), (100.0f * (width/height)), -100.0f, 100.0f);
-	}
+	}*/
+	gPerspectiveProjectionMatrix = perspective(45.0f, (GLfloat)width/(GLfloat)height, 0.1f,100.0f);
 }
 
 void uninitialize(){
@@ -541,17 +579,29 @@ void uninitialize(){
 	}
 	
 	//destroy vao
-	if(gVao)
+	if(gVao_triangle)
 	{
-		glDeleteVertexArrays(1, &gVao);
-		gVao = 0;
+		glDeleteVertexArrays(1, &gVao_triangle);
+		gVao_triangle = 0;
+	}
+	
+	if(gVao_square)
+	{
+		glDeleteVertexArrays(1, &gVao_square);
+		gVao_square = 0;
 	}
 	
 	//destroy vbo
-	if(gVbo)
+	if(gVbo_triangle)
 	{
-		glDeleteBuffers(1, &gVbo);
-		gVbo = 0;
+		glDeleteBuffers(1, &gVbo_triangle);
+		gVbo_triangle = 0;
+	}
+	
+	if(gVbo_square)
+	{
+		glDeleteBuffers(1, &gVbo_square);
+		gVbo_square = 0;
 	}
 	
 	//detach vertex shader from shader program object

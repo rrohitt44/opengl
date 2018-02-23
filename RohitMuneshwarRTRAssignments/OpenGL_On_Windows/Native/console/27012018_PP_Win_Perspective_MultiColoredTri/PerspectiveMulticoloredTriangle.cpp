@@ -1,4 +1,4 @@
- #include<windows.h>
+#include<windows.h>
 #include<stdio.h> //for file IO
 #include<gl/glew.h> //for GLSL extensions
 #include<gl/GL.h>
@@ -46,10 +46,11 @@ GLuint gFragmentShaderObject;
 GLuint gShaderProgramObject;
 
 GLuint gVao;
-GLuint gVbo;
+GLuint gVbo_position;
+GLuint gVbo_color;
 GLuint gMVPUniform;
 
-mat4 gOrthographicProjectionMatrix;
+mat4 gPerspectiveProjectionMatrix;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
 	void initialize(void);
@@ -58,7 +59,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("Orthographic Window using Programmable Pipeline");
+	TCHAR WinName[] = TEXT("Perspective Triangle using Programmable Pipeline");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
@@ -322,10 +323,13 @@ void initialize(){
 				"#version 440							"\
 				"\n										"\
 				"in vec4 vPosition;						"\
+				"in vec4 vColor;"\
 				"uniform mat4 u_mvp_matrix;				"\
+				"out vec4 out_color;"\
 				"void main(void)						"\
 				"{										"\
 				"gl_Position = u_mvp_matrix * vPosition;	"\
+				"out_color=vColor;"\
 				"}										";
 				
 				
@@ -364,10 +368,11 @@ void initialize(){
 	const GLchar *fragmentShaderSourceCode =
 				"#version 440" \
 				"\n" \
+				"in vec4 out_color;"\
 				"out vec4 FragColor;" \
 				"void main(void)" \
 				"{" \
-				"FragColor=vec4(1.0,1.0,1.0,1.0);" \
+				"FragColor=out_color;" \
 				"}";
 				
 	glShaderSource(gFragmentShaderObject, 1, (const GLchar**)&fragmentShaderSourceCode,NULL);
@@ -410,6 +415,8 @@ void initialize(){
 	//pre-link binding of shader program object with vertex shader position attribute
 	glBindAttribLocation(gShaderProgramObject, VDG_ATTRIBUTE_VERTEX,"vPosition");
 	
+	glBindAttribLocation(gShaderProgramObject, VDG_ATTRIBUTE_COLOR, "vColor");
+	
 	//link shader
 	glLinkProgram(gShaderProgramObject);
 	GLint iShaderProgramLinkStatus=0;
@@ -438,22 +445,39 @@ void initialize(){
 	//vertices, colors, shader attribs, vbo, vao initializations
 	const GLfloat triangleVertices[]=
 	{
-		0.0f,50.0f,0.0f, //apex
-		-50.0f,-50.0f,0.0f, // lb
-		50.0f,-50.0f,0.0f //rb
+		0.0f,1.0f,0.0f, //apex
+		-1.0f,-1.0f,0.0f, // lb
+		1.0f,-1.0f,0.0f //rb
+	};
+	
+	const GLfloat triangleColor[] =
+	{
+		1.0f,0.0f,0.0f,
+		0.0f,1.0f,0.0f,
+		0.0f,0.0f,1.0f
 	};
 	
 	glGenVertexArrays(1, &gVao);
 	glBindVertexArray(gVao);
 	
-	glGenBuffers(1, &gVbo);
-	glBindBuffer(GL_ARRAY_BUFFER, gVbo);
+	glGenBuffers(1, &gVbo_position);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_position);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(VDG_ATTRIBUTE_VERTEX, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	
 	glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glBindVertexArray(0);
+	
+	//color wala vbo
+	glGenBuffers(1,&gVbo_color);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_color);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(triangleColor), triangleColor, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_COLOR, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_COLOR);
+	glBindBuffer(GL_ARRAY_BUFFER,0);
+	
 	glBindVertexArray(0);
 	
 	glShadeModel(GL_SMOOTH);
@@ -473,10 +497,10 @@ void initialize(){
 	//we will always cull back faces for better performance
 	glEnable(GL_CULL_FACE);
 	
-	glClearColor(0.0f,0.0f,1.0f,0.0f);
+	glClearColor(0.0f,0.0f,0.0f,0.0f);
 	
 	//set orthographicMatrix to identify matrix
-	gOrthographicProjectionMatrix = mat4::identity();
+	gPerspectiveProjectionMatrix = mat4::identity();
 	
 	//resize
 	resize(WIN_WIDTH,WIN_HEIGHT);
@@ -493,8 +517,11 @@ void display(){
 	mat4 modelViewMatrix = mat4::identity();
 	mat4 modelViewProjectionMatrix=mat4::identity();
 	
-	//multiply the modelview and orthographic matrix to get modelviewprojection matrix
-	modelViewProjectionMatrix = gOrthographicProjectionMatrix * modelViewMatrix; //order is important
+	//translate
+	modelViewMatrix = translate(0.0f,0.0f,-3.0f);
+	
+	//multiply the modelview and perspective matrix to get modelviewprojection matrix
+	modelViewProjectionMatrix = gPerspectiveProjectionMatrix * modelViewMatrix; //order is important
 	
 	//pass the above modelViewProjectionMatrix to the vertex shader in 'u_mvp_matrix' shader variable
 	//whose position value we already calculated in initWithFrame() by using glGetUniformLocation()
@@ -522,13 +549,14 @@ void resize(int width,int height){
 	glViewport(0,0,(GLsizei)width,(GLsizei)height);
 	
 	//glOrtho(left,right,bottom,top,near,far);
-	if(width<=height)
+	/*if(width<=height)
 	{
 			gOrthographicProjectionMatrix = ortho(-100.0f,100.0f, (-100.0f * (height/width)), (100.0f * (height/width)), -100.0f, 100.0f);
 	}else
 	{
 		gOrthographicProjectionMatrix = ortho(-100.0f, 100.0f, (-100.0f * (width/height)), (100.0f * (width/height)), -100.0f, 100.0f);
-	}
+	}*/
+	gPerspectiveProjectionMatrix = perspective(45.0f, (GLfloat)width/(GLfloat)height, 0.1f,100.0f);
 }
 
 void uninitialize(){
@@ -548,10 +576,16 @@ void uninitialize(){
 	}
 	
 	//destroy vbo
-	if(gVbo)
+	if(gVbo_position)
 	{
-		glDeleteBuffers(1, &gVbo);
-		gVbo = 0;
+		glDeleteBuffers(1, &gVbo_position);
+		gVbo_position = 0;
+	}
+	
+	if(gVbo_color)
+	{
+		glDeleteBuffers(1, &gVbo_color);
+		gVbo_color = 0;
 	}
 	
 	//detach vertex shader from shader program object

@@ -1,4 +1,4 @@
- #include<windows.h>
+#include<windows.h>
 #include<stdio.h> //for file IO
 #include<gl/glew.h> //for GLSL extensions
 #include<gl/GL.h>
@@ -45,20 +45,27 @@ GLuint gVertexShaderObject;
 GLuint gFragmentShaderObject;
 GLuint gShaderProgramObject;
 
-GLuint gVao;
-GLuint gVbo;
+GLuint gVao_Pyramid;
+GLuint gVbo_Pyramid_position;
+GLuint gVbo_Pyramid_color;
+GLuint gVao_Cube;
+GLuint gVbo_Cube_position;
+GLuint gVbo_Cube_color;
 GLuint gMVPUniform;
 
-mat4 gOrthographicProjectionMatrix;
+GLfloat anglePyramid=0.0f;
+GLfloat angleCube=0.0f;
+
+mat4 gPerspectiveProjectionMatrix;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
 	void initialize(void);
 	void uninitialize(void);
 	void display(void);
-	
+	void updateAngle(void);
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("Orthographic Window using Programmable Pipeline");
+	TCHAR WinName[] = TEXT("Perspective Rotate Colored 3D Geometry using Programmable Pipeline");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
@@ -139,7 +146,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 				if(gbEscapePressed == true){
 					gbDone = true;
 				}
-				
+				updateAngle();
 				display(); //for double buffer
 			}
 		}
@@ -147,6 +154,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	
 	uninitialize();
 	return ((int) msg.wParam);
+}
+
+void updateAngle(void){
+	if(anglePyramid>=360.0f)
+	{
+		anglePyramid=0.0f;
+	}
+
+	if(angleCube>=360.0f)
+	{
+		angleCube=0.0f;
+	}	
+	
+	anglePyramid=anglePyramid+0.1f;
+	angleCube=angleCube+0.1f;
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
@@ -322,10 +344,13 @@ void initialize(){
 				"#version 440							"\
 				"\n										"\
 				"in vec4 vPosition;						"\
+				"in vec4 vColor;"\
 				"uniform mat4 u_mvp_matrix;				"\
+				"out vec4 out_color;"\
 				"void main(void)						"\
 				"{										"\
 				"gl_Position = u_mvp_matrix * vPosition;	"\
+				"out_color=vColor;"\
 				"}										";
 				
 				
@@ -364,10 +389,11 @@ void initialize(){
 	const GLchar *fragmentShaderSourceCode =
 				"#version 440" \
 				"\n" \
+				"in vec4 out_color;"\
 				"out vec4 FragColor;" \
 				"void main(void)" \
 				"{" \
-				"FragColor=vec4(1.0,1.0,1.0,1.0);" \
+				"FragColor=out_color;" \
 				"}";
 				
 	glShaderSource(gFragmentShaderObject, 1, (const GLchar**)&fragmentShaderSourceCode,NULL);
@@ -436,24 +462,114 @@ void initialize(){
 	gMVPUniform = glGetUniformLocation(gShaderProgramObject, "u_mvp_matrix");
 	
 	//vertices, colors, shader attribs, vbo, vao initializations
-	const GLfloat triangleVertices[]=
+	const GLfloat pyramidVertices[]=
 	{
-		0.0f,50.0f,0.0f, //apex
-		-50.0f,-50.0f,0.0f, // lb
-		50.0f,-50.0f,0.0f //rb
+		0.0f,1.0f,0.0f, //apex
+		-1.0f,-1.0f,1.0f,
+		1.0f,-1.0f,0.0f,
+		0.0f,1.0f,0.0f, //apex
+		-1.0f,-1.0f,1.0f,
+		1.0f,-1.0f,-1.0f,
+		0.0f,1.0f,0.0f, //apex
+		1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		0.0f,1.0f,0.0f, //apex
+		-1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,1.0f
 	};
 	
-	glGenVertexArrays(1, &gVao);
-	glBindVertexArray(gVao);
+	const GLfloat pyramidColor[] =
+	{
+		1.0f,0.0f,0.0f,
+		0.0f,1.0f,0.0f,
+		0.0f,0.0f,1.0f,
+		1.0f,0.0f,0.0f,
+		0.0f,0.0f,1.0f,
+		0.0f,1.0f,0.0f,
+		1.0f,0.0f,0.0f,
+		0.0f,1.0f,0.0f,
+		0.0f,0.0f,1.0f,
+		1.0f,0.0f,0.0f,
+		0.0f,0.0f,1.0f,
+		0.0f,1.0f,0.0f
+	};
 	
-	glGenBuffers(1, &gVbo);
-	glBindBuffer(GL_ARRAY_BUFFER, gVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
+	const GLfloat cubeVertices[]=
+	{
+		1.0f,1.0f,1.0f,
+		-1.0f,1.0f,1.0f,
+		-1.0f,-1.0f,1.0f,
+		1.0f,-1.0f,1.0f,
+		1.0f,1.0f,-1.0f,
+		1.0f,1.0f,1.0f,
+		1.0f,-1.0f,1.0f,
+		1.0f,-1.0f,-1.0f,
+		1.0f,1.0f,-1.0f,
+		-1.0f,1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		1.0f,-1.0f,-1.0f,
+		-1.0f,1.0f,-1.0f,
+		-1.0f,1.0f,1.0f,
+		-1.0f,-1.0f,1.0f,
+		-1.0f,-1.0f,-1.0f,
+		1.0f,-1.0f,1.0f,
+		-1.0f,-1.0f,1.0f,
+		-1.0f,-1.0f,-1.0f,
+		1.0f,-1.0f,-1.0f
+	};
+	
+	const GLfloat cubeColorVertices[]=
+	{
+		0.0f,0.0f,1.0f,
+		1.0f,0.0f,1.0f,
+		0.0f,1.0f,1.0f,
+		1.0f,1.0f,0.0f,
+		1.0f,0.0f,0.0f,
+		0.0f,1.0f,0.0f
+	};
+	
+	glGenVertexArrays(1, &gVao_Pyramid);
+	glBindVertexArray(gVao_Pyramid);
+	
+	glGenBuffers(1, &gVbo_Pyramid_position);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_Pyramid_position);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidVertices), pyramidVertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(VDG_ATTRIBUTE_VERTEX, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	
 	glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	//color wala vbo
+	glGenBuffers(1,&gVbo_Pyramid_color);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_Pyramid_color);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidColor), pyramidColor, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_COLOR, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_COLOR);
+	glBindBuffer(GL_ARRAY_BUFFER,0);
+	
+	glBindVertexArray(0);
+	
+	//square
+	glGenVertexArrays(1,&gVao_Cube);
+	glBindVertexArray(gVao_Cube);
+	
+	glGenBuffers(1,&gVbo_Cube_position);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_Cube_position);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices),cubeVertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_VERTEX,3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	glGenBuffers(1,&gVbo_Cube_color);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_Cube_color);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeColorVertices),cubeColorVertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_COLOR,3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_COLOR);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	
+	
 	glBindVertexArray(0);
 	
 	glShadeModel(GL_SMOOTH);
@@ -473,10 +589,10 @@ void initialize(){
 	//we will always cull back faces for better performance
 	glEnable(GL_CULL_FACE);
 	
-	glClearColor(0.0f,0.0f,1.0f,0.0f);
+	glClearColor(0.0f,0.0f,0.0f,0.0f);
 	
 	//set orthographicMatrix to identify matrix
-	gOrthographicProjectionMatrix = mat4::identity();
+	gPerspectiveProjectionMatrix = mat4::identity();
 	
 	//resize
 	resize(WIN_WIDTH,WIN_HEIGHT);
@@ -492,21 +608,44 @@ void display(){
 	//set modelview & modelviewprojection matrices to identity
 	mat4 modelViewMatrix = mat4::identity();
 	mat4 modelViewProjectionMatrix=mat4::identity();
+	mat4 rotationMatrix=mat4::identity();
 	
-	//multiply the modelview and orthographic matrix to get modelviewprojection matrix
-	modelViewProjectionMatrix = gOrthographicProjectionMatrix * modelViewMatrix; //order is important
+	//translate
+	modelViewMatrix = translate(-1.5f,0.0f,-6.0f);
+	rotationMatrix = vmath::rotate(anglePyramid,0.0f,1.0f,0.0f);
+	modelViewMatrix = modelViewMatrix * rotationMatrix;
+	//multiply the modelview and perspective matrix to get modelviewprojection matrix
+	modelViewProjectionMatrix = gPerspectiveProjectionMatrix * modelViewMatrix; //order is important
 	
 	//pass the above modelViewProjectionMatrix to the vertex shader in 'u_mvp_matrix' shader variable
 	//whose position value we already calculated in initWithFrame() by using glGetUniformLocation()
 	glUniformMatrix4fv(gMVPUniform, 1, GL_FALSE, modelViewProjectionMatrix);
 	
 	//bind vao
-	glBindVertexArray(gVao);
+	glBindVertexArray(gVao_Pyramid);
 	
 	//draw, either by glDrawTriangles() or glDrawArrays() or glDrawElements()
-	glDrawArrays(GL_TRIANGLES, 0,3);
+	glDrawArrays(GL_TRIANGLES, 0,12);
 	
 	//unbind vao
+	glBindVertexArray(0);
+	
+	
+	//draw square
+	modelViewMatrix = mat4::identity();
+	modelViewProjectionMatrix=mat4::identity();
+	rotationMatrix=mat4::identity();
+	modelViewMatrix=translate(1.5f, 0.0f,-7.0f);
+	rotationMatrix = vmath::rotate(angleCube,0.0f,1.0f,0.0f);
+	modelViewMatrix = modelViewMatrix * rotationMatrix;
+	modelViewProjectionMatrix=gPerspectiveProjectionMatrix*modelViewMatrix;
+	glUniformMatrix4fv(gMVPUniform, 1, GL_FALSE, modelViewProjectionMatrix);
+	glBindVertexArray(gVao_Cube);
+	glDrawArrays(GL_QUADS, 0,4);
+	glDrawArrays(GL_QUADS, 0,8);
+	glDrawArrays(GL_QUADS, 0,12);
+	glDrawArrays(GL_QUADS, 0,16);
+	glDrawArrays(GL_QUADS, 0,20);
 	glBindVertexArray(0);
 	
 	//stop using OpenGL program object
@@ -522,13 +661,14 @@ void resize(int width,int height){
 	glViewport(0,0,(GLsizei)width,(GLsizei)height);
 	
 	//glOrtho(left,right,bottom,top,near,far);
-	if(width<=height)
+	/*if(width<=height)
 	{
 			gOrthographicProjectionMatrix = ortho(-100.0f,100.0f, (-100.0f * (height/width)), (100.0f * (height/width)), -100.0f, 100.0f);
 	}else
 	{
 		gOrthographicProjectionMatrix = ortho(-100.0f, 100.0f, (-100.0f * (width/height)), (100.0f * (width/height)), -100.0f, 100.0f);
-	}
+	}*/
+	gPerspectiveProjectionMatrix = perspective(45.0f, (GLfloat)width/(GLfloat)height, 0.1f,100.0f);
 }
 
 void uninitialize(){
@@ -541,17 +681,41 @@ void uninitialize(){
 	}
 	
 	//destroy vao
-	if(gVao)
+	if(gVao_Pyramid)
 	{
-		glDeleteVertexArrays(1, &gVao);
-		gVao = 0;
+		glDeleteVertexArrays(1, &gVao_Pyramid);
+		gVao_Pyramid = 0;
+	}
+	
+	if(gVao_Cube)
+	{
+		glDeleteVertexArrays(1, &gVao_Cube);
+		gVao_Cube = 0;
 	}
 	
 	//destroy vbo
-	if(gVbo)
+	if(gVbo_Pyramid_position)
 	{
-		glDeleteBuffers(1, &gVbo);
-		gVbo = 0;
+		glDeleteBuffers(1, &gVbo_Pyramid_position);
+		gVbo_Pyramid_position = 0;
+	}
+	
+	if(gVbo_Pyramid_color)
+	{
+		glDeleteBuffers(1, &gVbo_Pyramid_color);
+		gVbo_Pyramid_color = 0;
+	}
+	
+	if(gVbo_Cube_position)
+	{
+		glDeleteBuffers(1, &gVbo_Cube_position);
+		gVbo_Cube_position = 0;
+	}
+	
+	if(gVbo_Cube_color)
+	{
+		glDeleteBuffers(1, &gVbo_Cube_color);
+		gVbo_Cube_color = 0;
 	}
 	
 	//detach vertex shader from shader program object
