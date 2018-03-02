@@ -23,8 +23,16 @@ link.exe program.obj /LIBPATH:C:\glew\lib\Release\Win32 glew32.lib
 Compile and Link at one go:
 cl.exe /EHsc abc.cpp /link user32.lib gdi32.lib ab.res
 
+ReadMe
+1 compiling resource file
+rc sugat.rc
 
+2 compiling in a single line
 
+cl.exe /EHsc .cpp file user32.lib gid32.lib sugat.res 
+
+cl.exe /c /EHsc /I C:\glew\include *.cpp
+link.exe *.obj *.res /LIBPATH:C:\glew\lib\Release\Win32 glew32.lib
 
 
 ====================================================================

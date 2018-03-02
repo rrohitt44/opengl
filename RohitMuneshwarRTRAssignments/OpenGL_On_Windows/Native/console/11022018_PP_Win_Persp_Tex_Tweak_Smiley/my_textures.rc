@@ -1,0 +1,4 @@
+#include "my_texture.h"
+
+// bitmap
+IDBITMAP_SMILEY   BITMAP DISCARDABLE "smiley.bmp"

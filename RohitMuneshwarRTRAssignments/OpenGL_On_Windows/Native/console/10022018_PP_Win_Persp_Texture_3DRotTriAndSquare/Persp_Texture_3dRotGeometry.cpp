@@ -4,6 +4,7 @@
 #include<gl/GL.h>
 
 #include "vmath.h"
+#include "my_texture.h"
 
 #pragma comment(lib,"glew32.lib")
 #pragma comment(lib, "opengl32.lib")
@@ -47,14 +48,18 @@ GLuint gShaderProgramObject;
 
 GLuint gVao_Pyramid;
 GLuint gVbo_Pyramid_position;
-GLuint gVbo_Pyramid_color;
+GLuint gVbo_Pyramid_Texture;
 GLuint gVao_Cube;
 GLuint gVbo_Cube_position;
-GLuint gVbo_Cube_color;
+GLuint gVbo_Cube_Texture;
 GLuint gMVPUniform;
 
 GLfloat anglePyramid=0.0f;
 GLfloat angleCube=0.0f;
+
+GLuint gTexture_sampler_uniform;
+GLuint gTexture_Kundali;
+GLuint gTexture_Stone;
 
 mat4 gPerspectiveProjectionMatrix;
 
@@ -273,6 +278,7 @@ void ToggleFullscreen(){
 
 void initialize(){
 	void resize(int,int);
+	int loadGlTextures(GLuint *, TCHAR[]);
 	void uninitialize(void);
 	
 	PIXELFORMATDESCRIPTOR pfd;
@@ -333,24 +339,16 @@ void initialize(){
 	
 	//provide source code to shader
 	const GLchar *vertexShaderSourceCode =
-				/*"#version 440" \
-				"\n" \
-				"in vec4 vPosition;" \
-				"uniform mat4 u_mvp_matrix;" \
-				"void main(void)" \
-				"{" \
-				"gl_Position=u_mvp_matrix * vPosition;" \
-				"}";*/
 				"#version 440							"\
 				"\n										"\
 				"in vec4 vPosition;						"\
-				"in vec4 vColor;"\
+				"in vec2 vTexture0_coords;"\
 				"uniform mat4 u_mvp_matrix;				"\
-				"out vec4 out_color;"\
+				"out vec2 out_texture0_coords;"\
 				"void main(void)						"\
 				"{										"\
 				"gl_Position = u_mvp_matrix * vPosition;	"\
-				"out_color=vColor;"\
+				"out_texture0_coords=vTexture0_coords;"\
 				"}										";
 				
 				
@@ -389,11 +387,12 @@ void initialize(){
 	const GLchar *fragmentShaderSourceCode =
 				"#version 440" \
 				"\n" \
-				"in vec4 out_color;"\
+				"in vec2 out_texture0_coords;"\
 				"out vec4 FragColor;" \
+				"uniform sampler2D u_texture0_sampler;"\
 				"void main(void)" \
 				"{" \
-				"FragColor=out_color;" \
+				"FragColor=texture(u_texture0_sampler, out_texture0_coords);" \
 				"}";
 				
 	glShaderSource(gFragmentShaderObject, 1, (const GLchar**)&fragmentShaderSourceCode,NULL);
@@ -435,21 +434,27 @@ void initialize(){
 	
 	//pre-link binding of shader program object with vertex shader position attribute
 	glBindAttribLocation(gShaderProgramObject, VDG_ATTRIBUTE_VERTEX,"vPosition");
-	glBindAttribLocation(gShaderProgramObject, VDG_ATTRIBUTE_COLOR, "vColor");
+	
+	// pre-link binding of shader program object with vertex shader texture attribute
+	glBindAttribLocation(gShaderProgramObject, VDG_ATTRIBUTE_TEXTURE0, "vTexture0_coords");
+	
 	//link shader
 	glLinkProgram(gShaderProgramObject);
 	GLint iShaderProgramLinkStatus=0;
-	glGetProgramiv(gShaderProgramObject, GL_LINK_STATUS, &iShaderProgramLinkStatus);
+	//reinitialize 
+	iInfoLogLength = 0;
+	szInfoLog = NULL;
+	glGetShaderiv(gShaderProgramObject, GL_LINK_STATUS, &iShaderProgramLinkStatus);
 	if(iShaderProgramLinkStatus==GL_FALSE)
 	{
-		glGetProgramiv(gShaderProgramObject, GL_INFO_LOG_LENGTH, &iInfoLogLength);
+		glGetShaderiv(gShaderProgramObject, GL_INFO_LOG_LENGTH, &iInfoLogLength);
 		if(iInfoLogLength>0)
 		{
 			szInfoLog=(char *)malloc(iInfoLogLength);
 			if(szInfoLog!=NULL)
 			{
 				GLsizei written;
-				glGetProgramInfoLog(gShaderProgramObject, iInfoLogLength, &written, szInfoLog);
+				glGetShaderInfoLog(gShaderProgramObject, iInfoLogLength, &written, szInfoLog);
 				fprintf(g_fp_logfile, "Shader Program Link Log: %s\n", szInfoLog);
 				free(szInfoLog);
 				uninitialize();
@@ -461,8 +466,10 @@ void initialize(){
 	//get MVP uniform location
 	gMVPUniform = glGetUniformLocation(gShaderProgramObject, "u_mvp_matrix");
 	
+	gTexture_sampler_uniform = glGetUniformLocation(gShaderProgramObject, "u_texture0_sampler");
+	
 	//vertices, colors, shader attribs, vbo, vao initializations
-	const GLfloat pyramidVertices[]=
+	const GLfloat pyramidVertices[] =
 	{
 		0, 1, 0,
 		-1, -1, 1,
@@ -481,26 +488,26 @@ void initialize(){
 		-1, -1, 1
 	};
 	
-	const GLfloat pyramidColor[] =
+	const GLfloat pyramidTexchords[] =
 	{
-		1, 0, 0,
-		0, 1, 0,
-		0, 0, 1,
+		0.5, 1.0, // front-top
+		0.0, 0.0, // front-left
+		1.0, 0.0, // front-right
 
-		1, 0, 0,
-		0, 0, 1,
-		0, 1, 0,
+		0.5, 1.0, // right-top
+		1.0, 0.0, // right-left
+		0.0, 0.0, // right-right
 
-		1, 0, 0,
-		0, 1, 0,
-		0, 0, 1,
+		0.5, 1.0, // back-top
+		1.0, 0.0, // back-left
+		0.0, 0.0, // back-right
 
-		1, 0, 0,
-		0, 0, 1,
-		0, 1, 0
+		0.5, 1.0, // left-top
+		0.0, 0.0, // left-left
+		1.0, 0.0, // left-right
 	};
-	
-	const GLfloat cubeVertices[]=
+
+	GLfloat cubeVertices[] =
 	{
 		1.0f, 1.0f, -1.0f,
 		-1.0f, 1.0f, -1.0f,
@@ -530,45 +537,47 @@ void initialize(){
 		1.0f, 1.0f, -1.0f,
 		1.0f, 1.0f, 1.0f,
 		1.0f, -1.0f, 1.0f,
-		1.0f, -1.0f, -1.0f
+		1.0f, -1.0f, -1.0f,
 	};
 	
-	const GLfloat cubeColorVertices[]=
+	const GLfloat cubeTexcoords[] =
 	{
-		0.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
 
-		1.0f, 0.5f, 0.0f,
-		1.0f, 0.5f, 0.0f,
-		1.0f, 0.5f, 0.0f,
-		1.0f, 0.5f, 0.0f,
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
 
-		1.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
 
-		1.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f,
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
 
-		0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 1.0f,
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
 
-		1.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 1.0f
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
 	};
 	
+	//vao pyramid position
 	glGenVertexArrays(1, &gVao_Pyramid);
 	glBindVertexArray(gVao_Pyramid);
 	
+	//vbo pyramid position
 	glGenBuffers(1, &gVbo_Pyramid_position);
 	glBindBuffer(GL_ARRAY_BUFFER, gVbo_Pyramid_position);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidVertices), pyramidVertices, GL_STATIC_DRAW);
@@ -578,13 +587,13 @@ void initialize(){
 	
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
-	//color wala vbo
-	glGenBuffers(1,&gVbo_Pyramid_color);
-	glBindBuffer(GL_ARRAY_BUFFER, gVbo_Pyramid_color);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidColor), pyramidColor, GL_STATIC_DRAW);
-	glVertexAttribPointer(VDG_ATTRIBUTE_COLOR, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glEnableVertexAttribArray(VDG_ATTRIBUTE_COLOR);
-	glBindBuffer(GL_ARRAY_BUFFER,0);
+	//vbo pyramid texture
+	glGenBuffers(1, &gVbo_Pyramid_Texture);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_Pyramid_Texture);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidTexchords), pyramidTexchords, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_TEXTURE0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_TEXTURE0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
 	glBindVertexArray(0);
 	
@@ -592,6 +601,7 @@ void initialize(){
 	glGenVertexArrays(1,&gVao_Cube);
 	glBindVertexArray(gVao_Cube);
 	
+	//square vbo position
 	glGenBuffers(1,&gVbo_Cube_position);
 	glBindBuffer(GL_ARRAY_BUFFER, gVbo_Cube_position);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices),cubeVertices, GL_STATIC_DRAW);
@@ -599,14 +609,13 @@ void initialize(){
 	glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
-	glGenBuffers(1,&gVbo_Cube_color);
-	glBindBuffer(GL_ARRAY_BUFFER, gVbo_Cube_color);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeColorVertices),cubeColorVertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(VDG_ATTRIBUTE_COLOR,3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glEnableVertexAttribArray(VDG_ATTRIBUTE_COLOR);
+	//square vbo texture
+	glGenBuffers(1, &gVbo_Cube_Texture);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_Cube_Texture);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeTexcoords), cubeTexcoords, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_TEXTURE0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_TEXTURE0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
-	
 	
 	glBindVertexArray(0);
 	
@@ -627,6 +636,10 @@ void initialize(){
 	//we will always cull back faces for better performance
 	glEnable(GL_CULL_FACE);
 	
+	loadGlTextures(&gTexture_Kundali, MAKEINTRESOURCE(IDBITMAP_KUNDALI));
+	loadGlTextures(&gTexture_Stone, MAKEINTRESOURCE(IDBITMAP_STONE));
+	
+	glEnable(GL_TEXTURE_2D);
 	glClearColor(0.0f,0.0f,0.0f,0.0f);
 	
 	//set orthographicMatrix to identify matrix
@@ -636,9 +649,42 @@ void initialize(){
 	resize(WIN_WIDTH,WIN_HEIGHT);
 }
 
+int loadGlTextures(GLuint *texture, TCHAR imageResourceId[])
+{
+	//variable declaration
+	HBITMAP hBitmap;
+	BITMAP bmp;
+	int iStatus = FALSE;
+	
+	//code
+	glGenTextures(1, texture); //1. image
+	hBitmap = (HBITMAP) LoadImage(GetModuleHandle(NULL), imageResourceId, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+	
+	if(hBitmap)
+	{
+		iStatus = TRUE;
+		GetObject(hBitmap, sizeof(bmp), &bmp);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glBindTexture(GL_TEXTURE_2D, *texture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, bmp.bmWidth, bmp.bmHeight, 0, GL_BGR, GL_UNSIGNED_BYTE, bmp.bmBits);
+		
+		//create mipmap for this texture for better image quality
+		glGenerateMipmap(GL_TEXTURE_2D);
+		
+		//delete unwanted bitmap object
+		DeleteObject(hBitmap);
+	}
+	return(iStatus);
+}
+
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // | GL_STENCIL_BUFFER add kelyawar output disat nhi.... why?
 	
+	//restore modelview and identity
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 	//start using OpenGL program object
 	glUseProgram(gShaderProgramObject);
 	
@@ -659,6 +705,12 @@ void display(){
 	//whose position value we already calculated in initWithFrame() by using glGetUniformLocation()
 	glUniformMatrix4fv(gMVPUniform, 1, GL_FALSE, modelViewProjectionMatrix);
 	
+	// bind with pyramid texture
+	glActiveTexture(GL_TEXTURE0); // 0th texture ( corresponds to VDG_ATTRIBUTE_TEXTURE0 )
+	glBindTexture(GL_TEXTURE_2D, gTexture_Stone);
+	glUniform1i(gTexture_sampler_uniform, 0); // 0th sampler enable ( as we have only 1 texture sampler in fragment shader )
+
+	
 	//bind vao
 	glBindVertexArray(gVao_Pyramid);
 	
@@ -671,19 +723,34 @@ void display(){
 	
 	//draw square
 	modelViewMatrix = mat4::identity();
-	modelViewProjectionMatrix=mat4::identity();
+	//modelViewProjectionMatrix=mat4::identity();
 	rotationMatrix=mat4::identity();
 	modelViewMatrix=translate(1.5f, 0.0f,-8.0f);
-	rotationMatrix = vmath::rotate(angleCube,angleCube,angleCube);
+	
+//	rotationMatrix = vmath::rotate(angleCube,1.0f,1.0f,1.0f);
+	rotationMatrix = vmath::rotate(angleCube, angleCube, angleCube);
 	modelViewMatrix = modelViewMatrix * rotationMatrix;
 	modelViewProjectionMatrix=gPerspectiveProjectionMatrix*modelViewMatrix;
 	glUniformMatrix4fv(gMVPUniform, 1, GL_FALSE, modelViewProjectionMatrix);
+	
+	// bind with cube texture
+	glActiveTexture(GL_TEXTURE0); // 0th texture ( corresponds to VDG_ATTRIBUTE_TEXTURE0 )
+	glBindTexture(GL_TEXTURE_2D, gTexture_Kundali);
+	glUniform1i(gTexture_sampler_uniform, 0); // 0th sampler enable ( as we have only 1 texture sampler in fragment shader )
+
+	
 	glBindVertexArray(gVao_Cube);
-	glDrawArrays(GL_QUADS, 0,4);
-	glDrawArrays(GL_QUADS, 0,8);
-	glDrawArrays(GL_QUADS, 0,12);
-	glDrawArrays(GL_QUADS, 0,16);
-	glDrawArrays(GL_QUADS, 0,20);
+	// *** draw, either by glDrawTriangles() or glDrawArrays() or glDrawElements()
+	// actually 2 triangles make 1 square, so there should be 6 vertices,
+	// but as 2 tringles while making square meet each other at diagonal,
+	// 2 of 6 vertices are common to both triangles, and hence 6-2=4
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	glDrawArrays(GL_TRIANGLE_FAN, 4, 4);
+	glDrawArrays(GL_TRIANGLE_FAN, 8, 4);
+	glDrawArrays(GL_TRIANGLE_FAN, 12, 4);
+	glDrawArrays(GL_TRIANGLE_FAN, 16, 4);
+	glDrawArrays(GL_TRIANGLE_FAN, 20, 4);
+	
 	glBindVertexArray(0);
 	
 	//stop using OpenGL program object
@@ -738,10 +805,16 @@ void uninitialize(){
 		gVbo_Pyramid_position = 0;
 	}
 	
-	if(gVbo_Pyramid_color)
+	if(gVbo_Pyramid_Texture)
 	{
-		glDeleteBuffers(1, &gVbo_Pyramid_color);
-		gVbo_Pyramid_color = 0;
+		glDeleteBuffers(1, &gVbo_Pyramid_Texture);
+		gVbo_Pyramid_Texture = 0;
+	}
+	
+	if (gTexture_Stone)
+	{
+		glDeleteTextures(1, &gTexture_Stone);
+		gTexture_Stone = 0;
 	}
 	
 	if(gVbo_Cube_position)
@@ -750,10 +823,16 @@ void uninitialize(){
 		gVbo_Cube_position = 0;
 	}
 	
-	if(gVbo_Cube_color)
+	if(gVbo_Cube_Texture)
 	{
-		glDeleteBuffers(1, &gVbo_Cube_color);
-		gVbo_Cube_color = 0;
+		glDeleteBuffers(1, &gVbo_Cube_Texture);
+		gVbo_Cube_Texture = 0;
+	}
+	
+	if (gTexture_Kundali)
+	{
+		glDeleteTextures(1, &gTexture_Kundali);
+		gTexture_Kundali = 0;
 	}
 	
 	//detach vertex shader from shader program object
