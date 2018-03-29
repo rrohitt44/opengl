@@ -1,6 +1,4 @@
-Log File opened successfully.
-
-Entered in CreateWindow()
+Log File Is Successfully Opened.
 10 Matching FB Configs Found.
 Matching Framebuffer Config=0 : Visual ID=0x112 : SAMPLE_BUFFERS=0 : SAMPLES=0
 Matching Framebuffer Config=1 : Visual ID=0x198 : SAMPLE_BUFFERS=0 : SAMPLES=0
@@ -13,12 +11,12 @@ Matching Framebuffer Config=7 : Visual ID=0x230 : SAMPLE_BUFFERS=1 : SAMPLES=8
 Matching Framebuffer Config=8 : Visual ID=0x152 : SAMPLE_BUFFERS=1 : SAMPLES=16
 Matching Framebuffer Config=9 : Visual ID=0x238 : SAMPLE_BUFFERS=1 : SAMPLES=16
 Chosen Visual ID=0x152
-Exiting from the CreateWindow()
-Entered in the Initialize()
-OpenGL 4.5 context is created successfully.
-
-Exiting from the Initialize()
-Entered in the ToggleFullScreen()
-Exiting from the ToggleFullScreen()
-Entered in the ToggleFullScreen()
-Exiting from the ToggleFullScreen()
+OpenGL Context 4.5 Is Created.
+Direct GLX Rendering Context Obtained
+GLEW initialization done successfully.
+compiling vertex shader.
+vertex shader compiled.
+compiling fragment shader.
+fragment shader compiled.
+shader object linked.
+Log File Is Successfully Closed.
