@@ -4,13 +4,12 @@
 #include<gl/GL.h>
 
 #include "vmath.h"
-#include "Sphere.h"
 
 #pragma comment(lib,"glew32.lib")
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
-#pragma comment(lib,"Sphere.lib")
+
 
 #define WIN_WIDTH 800
 #define WIN_HEIGHT 600
@@ -46,40 +45,21 @@ GLuint gVertexShaderObject;
 GLuint gFragmentShaderObject;
 GLuint gShaderProgramObject;
 
-GLuint gVao_sphere;
-GLuint gVbo_sphere_position;
-GLuint gVbo_sphere_normal;
-GLuint gVbo_sphere_element;
-
-GLuint gModelMatrixUniform, gViewMatrixUniform, gProjectionMatrixUniform;
-
-GLuint gLdUniform;
-GLuint gLaUniform;
-GLuint gLsUniform;
-GLuint gLpUniform;
- 
-GLuint gKdUniform;
-GLuint gKaUniform;
-GLuint gKsUniform;
-GLuint gKShininessUniform;
-
-GLuint gLKeyPressedUniform;
+GLuint gVao_StraightBoard;
+GLuint gVbo_StraightBoard_Position;
 
 
+GLuint gVao_TiltedBoard;
+GLuint gVbo_TiltedBoard_Position;
+
+GLuint gVbo_CheckerBoard_Texture;
+GLuint gMVPUniform;
+
+
+GLuint gTexture_sampler_uniform;
+
+GLuint texture_checkerBoard;
 mat4 gPerspectiveProjectionMatrix;
-
-bool gbLight;
-
-
-GLfloat lightAmbient[] = {0.0f,0.0f,0.0f,1.0f};
-GLfloat lightDiffuse[] = {1.0,1.0f,1.0f,1.0f};
-GLfloat lightSpecular[] = {1.0f,1.0f,1.0f,1.0f};
-GLfloat lightPosition[] = {100.0f,100.0f,100.0f,1.0f};
-
-GLfloat materialAmbient[] = {0.0f,0.0f,0.0f,1.0f};
-GLfloat materialDiffuse[] = {1.0,1.0f,1.0f,1.0f};
-GLfloat materialSpecular[] = {1.0f,1.0f,1.0f,1.0f};
-GLfloat materialShininess = {50.0f};
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLIne, int iCmdShow){
 	void initialize(void);
@@ -87,7 +67,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 	void display(void);
 	WNDCLASSEX wndclass;
 	TCHAR AppName[] = TEXT("Window Custom");
-	TCHAR WinName[] = TEXT("PP Lights - Per Vertex Phong Model");
+	TCHAR WinName[] = TEXT("Perspective Rotate Colored 3D Geometry using Programmable Pipeline");
 	HWND hwnd;
 	MSG msg;
 	RECT rect;
@@ -168,7 +148,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLI
 				if(gbEscapePressed == true){
 					gbDone = true;
 				}
-				
 				display(); //for double buffer
 			}
 		}
@@ -183,13 +162,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
 	void resize(int, int);
 	//void display(void);
 	void uninitialize(void);
-	
-	
-	
-	//variable declarations
-	static bool bIsAKeyPressed = false;
-	static bool bIsLKeyPressed = false;
-	
 	switch(iMsg){
 		//case for opengl
 		case WM_ACTIVATE:
@@ -222,18 +194,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam){
 						gbEscapePressed = true;
 					break;
 				break;
-				case 0x4C: // for 'L' or 'l'
-					if (bIsLKeyPressed == false)
-					{
-						gbLight = true;
-						bIsLKeyPressed = true;
-					}
-					else
-					{
-						gbLight = false;
-						bIsLKeyPressed = false;
-					}
-					break;
 				case 0x46: //F or f key
 					if(gbFullScreen==false)
 					{
@@ -299,6 +259,7 @@ void ToggleFullscreen(){
 
 void initialize(){
 	void resize(int,int);
+	GLuint loadGLTexture();
 	void uninitialize(void);
 	
 	PIXELFORMATDESCRIPTOR pfd;
@@ -362,40 +323,13 @@ void initialize(){
 				"#version 440							"\
 				"\n										"\
 				"in vec4 vPosition;						"\
-				"in vec3 vNormal;"\
-				"uniform mat4 u_model_matrix;"\
-				"uniform mat4 u_view_matrix;"\
-				"uniform mat4 u_projection_matrix;"\
-				"uniform int u_LKeyPressed;"\
-				"uniform vec3 u_La;"\
-				"uniform vec3 u_Ld;"\
-				"uniform vec3 u_Ls;"\
-				"uniform vec4 u_Lp;"\
-				"uniform vec3 u_Ka;"\
-				"uniform vec3 u_Kd;"\
-				"uniform vec3 u_Ks;"\
-				"uniform float u_KShininess;"\
-				"out vec3 phong_ads_color;"\
+				"in vec2 vTexture0_coords;"\
+				"uniform mat4 u_mvp_matrix;				"\
+				"out vec2 out_texture0_coords;"\
 				"void main(void)						"\
 				"{										"\
-				"if(u_LKeyPressed == 1)"\
-				"{"\
-				"vec4 eyeCoordinates = u_view_matrix * u_model_matrix * vPosition;"\
-				"vec3 transformed_normals = normalize(mat3(u_view_matrix * u_model_matrix) * vNormal);"\
-				"vec3 light_direction = normalize(vec3(u_Lp) - eyeCoordinates.xyz);"\
-				"float tn_dot_ld=max(dot(transformed_normals, light_direction),0.0);"\
-				"vec3 ambient = u_La * u_Ka;"\
-				"vec3 diffuse = u_Ld * u_Kd * tn_dot_ld;"\
-				"vec3 reflection_vector = reflect(-light_direction, transformed_normals);"\
-				"vec3 viewer_vector = normalize(-eyeCoordinates.xyz);"\
-				"vec3 specular = u_Ls * u_Ks * pow(max(dot(reflection_vector, viewer_vector),0.0), u_KShininess);"\
-				"phong_ads_color=ambient+diffuse+specular;"\
-				"}"\
-				"else"\
-				"{"\
-				"phong_ads_color=vec3(1.0,1.0,1.0);"\
-				"}"\
-				"gl_Position = u_projection_matrix * u_view_matrix * u_model_matrix * vPosition;	"\
+				"gl_Position = u_mvp_matrix * vPosition;	"\
+				"out_texture0_coords=vTexture0_coords;"\
 				"}										";
 				
 				
@@ -434,11 +368,12 @@ void initialize(){
 	const GLchar *fragmentShaderSourceCode =
 				"#version 440" \
 				"\n" \
-				"in vec3 phong_ads_color;"\
+				"in vec2 out_texture0_coords;"\
 				"out vec4 FragColor;" \
+				"uniform sampler2D u_texture0_sampler;"\
 				"void main(void)" \
 				"{" \
-				"FragColor=vec4(phong_ads_color, 1.0);" \
+				"FragColor=texture(u_texture0_sampler, out_texture0_coords);" \
 				"}";
 				
 	glShaderSource(gFragmentShaderObject, 1, (const GLchar**)&fragmentShaderSourceCode,NULL);
@@ -481,22 +416,26 @@ void initialize(){
 	//pre-link binding of shader program object with vertex shader position attribute
 	glBindAttribLocation(gShaderProgramObject, VDG_ATTRIBUTE_VERTEX,"vPosition");
 	
-	glBindAttribLocation(gShaderProgramObject, VDG_ATTRIBUTE_NORMAL,"vNormal");
+	// pre-link binding of shader program object with vertex shader texture attribute
+	glBindAttribLocation(gShaderProgramObject, VDG_ATTRIBUTE_TEXTURE0, "vTexture0_coords");
 	
 	//link shader
 	glLinkProgram(gShaderProgramObject);
 	GLint iShaderProgramLinkStatus=0;
-	glGetProgramiv(gShaderProgramObject, GL_LINK_STATUS, &iShaderProgramLinkStatus);
+	//reinitialize 
+	iInfoLogLength = 0;
+	szInfoLog = NULL;
+	glGetShaderiv(gShaderProgramObject, GL_LINK_STATUS, &iShaderProgramLinkStatus);
 	if(iShaderProgramLinkStatus==GL_FALSE)
 	{
-		glGetProgramiv(gShaderProgramObject, GL_INFO_LOG_LENGTH, &iInfoLogLength);
+		glGetShaderiv(gShaderProgramObject, GL_INFO_LOG_LENGTH, &iInfoLogLength);
 		if(iInfoLogLength>0)
 		{
 			szInfoLog=(char *)malloc(iInfoLogLength);
 			if(szInfoLog!=NULL)
 			{
 				GLsizei written;
-				glGetProgramInfoLog(gShaderProgramObject, iInfoLogLength, &written, szInfoLog);
+				glGetShaderInfoLog(gShaderProgramObject, iInfoLogLength, &written, szInfoLog);
 				fprintf(g_fp_logfile, "Shader Program Link Log: %s\n", szInfoLog);
 				free(szInfoLog);
 				uninitialize();
@@ -506,60 +445,73 @@ void initialize(){
 	}
 	
 	//get MVP uniform location
-	gModelMatrixUniform = glGetUniformLocation(gShaderProgramObject, "u_model_matrix");
-	gViewMatrixUniform = glGetUniformLocation(gShaderProgramObject, "u_view_matrix");
-	gProjectionMatrixUniform = glGetUniformLocation(gShaderProgramObject, "u_projection_matrix");
+	gMVPUniform = glGetUniformLocation(gShaderProgramObject, "u_mvp_matrix");
 	
-	gLKeyPressedUniform = glGetUniformLocation(gShaderProgramObject, "u_LKeyPressed");
+	gTexture_sampler_uniform = glGetUniformLocation(gShaderProgramObject, "u_texture0_sampler");
 	
-	gLaUniform = glGetUniformLocation(gShaderProgramObject, "u_La");
-	gLdUniform = glGetUniformLocation(gShaderProgramObject, "u_Ld");
-	gLsUniform = glGetUniformLocation(gShaderProgramObject, "u_Ls");
-	gLpUniform = glGetUniformLocation(gShaderProgramObject, "u_Lp");
-	
-	gKaUniform = glGetUniformLocation(gShaderProgramObject, "u_Ka");
-	gKdUniform = glGetUniformLocation(gShaderProgramObject, "u_Kd");
-	gKsUniform = glGetUniformLocation(gShaderProgramObject, "u_Ks");
-	gKShininessUniform = glGetUniformLocation(gShaderProgramObject, "u_KShininess");
-	
-	// *** vertices, colors, shader attribs, vbo, vao initializations ***
-	getSphereVertexData(sphere_vertices, sphere_normals, sphere_textures, sphere_elements);
-    int gNumVertices = getNumberOfSphereVertices();
-    int gNumElements = getNumberOfSphereElements();
-	// vao
-    glGenVertexArrays(1, &gVao_sphere);
-    glBindVertexArray(gVao_sphere);
+	 texture_checkerBoard = loadGLTexture();
 
-    // position vbo
-    glGenBuffers(1, &gVbo_sphere_position);
-    glBindBuffer(GL_ARRAY_BUFFER, gVbo_sphere_position);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(sphere_vertices), sphere_vertices, GL_STATIC_DRAW);
+	const GLfloat straightFacingQuadVertices[] = {
+		-2.0f,-1.0f,0.0f,
+		-2.0f,1.0f,0.0f,
+		0.0f,1.0f,0.0f,
+		0.0f,-1.0f,0.0f
+	};
 
-    glVertexAttribPointer(VDG_ATTRIBUTE_VERTEX, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	const GLfloat tiltedFacingQuadVertices[] = {
+		1.0f,-1.0f,0.0f,
+		1.0f,1.0f,0.0f,
+		2.41421f,1.0f,-1.41421f,
+		2.41421f,-1.0f,-1.41421f
+	};
 
-    glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
+	const GLfloat checkerBoardTexcoords[] =
+	{
+		0.0f, 0.0f,
+		0.0f,1.0f,
+		1.0f,1.0f,
+		1.0f,0.0f
+	};
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//*******Begin straightFacing*********
 
-    // normal vbo
-    glGenBuffers(1, &gVbo_sphere_normal);
-    glBindBuffer(GL_ARRAY_BUFFER, gVbo_sphere_normal);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(sphere_normals), sphere_normals, GL_STATIC_DRAW);
+	glGenVertexArrays(1, &gVao_StraightBoard);
+	glBindVertexArray(gVao_StraightBoard);
 
-    glVertexAttribPointer(VDG_ATTRIBUTE_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glGenBuffers(1, &gVbo_StraightBoard_Position);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_StraightBoard_Position);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(straightFacingQuadVertices), straightFacingQuadVertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_VERTEX, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glEnableVertexAttribArray(VDG_ATTRIBUTE_NORMAL);
+	glGenBuffers(1, &gVbo_CheckerBoard_Texture);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_CheckerBoard_Texture);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(checkerBoardTexcoords), checkerBoardTexcoords, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_TEXTURE0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_TEXTURE0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	//*******END straightFacing*********
+	glGenVertexArrays(1, &gVao_TiltedBoard);
+	glBindVertexArray(gVao_TiltedBoard);
 
-    // element vbo
-    glGenBuffers(1, &gVbo_sphere_element);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gVbo_sphere_element);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(sphere_elements), sphere_elements, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glGenBuffers(1, &gVbo_TiltedBoard_Position);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_TiltedBoard_Position);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(tiltedFacingQuadVertices), tiltedFacingQuadVertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_VERTEX, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_VERTEX);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // unbind vao
-    glBindVertexArray(0);
+	glGenBuffers(1, &gVbo_CheckerBoard_Texture);
+	glBindBuffer(GL_ARRAY_BUFFER, gVbo_CheckerBoard_Texture);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(checkerBoardTexcoords), checkerBoardTexcoords, GL_STATIC_DRAW);
+	glVertexAttribPointer(VDG_ATTRIBUTE_TEXTURE0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(VDG_ATTRIBUTE_TEXTURE0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindVertexArray(0);
 	
 	glShadeModel(GL_SMOOTH);
 	
@@ -576,64 +528,86 @@ void initialize(){
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	
 	//we will always cull back faces for better performance
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	
+	
+	glEnable(GL_TEXTURE_2D);
 	glClearColor(0.0f,0.0f,0.0f,0.0f);
 	
 	//set orthographicMatrix to identify matrix
 	gPerspectiveProjectionMatrix = mat4::identity();
 	
-	gbLight = false;
 	//resize
 	resize(WIN_WIDTH,WIN_HEIGHT);
+}
+
+GLuint loadGLTexture()
+{
+	GLuint texture;
+	glGenTextures(1, &texture);// 1 
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);// set 1 rather than default 4, for better performance
+	glBindTexture(GL_TEXTURE_2D, texture);// bind texture
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	int c = 0;
+	GLubyte checkImage[64][64][4];
+	for (int i = 0; i < 64; i++) {
+		for (int j = 0; j < 64; j++) {
+			for (int k = 0; k < 4; k++) {
+				c = ((i & 0x8) ^ (j & 0x8)) * 255;
+				if (k == 3)
+					checkImage[i][j][k] = ((GLubyte)255);
+				else
+					checkImage[i][j][k] = ((GLubyte)c);
+			}
+		}
+	}
+
+	glTexImage2D(GL_TEXTURE_2D,0, GL_RGBA,64,64,0, GL_RGBA,		GL_UNSIGNED_BYTE,		checkImage);
+
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	return(texture);
 }
 
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // | GL_STENCIL_BUFFER add kelyawar output disat nhi.... why?
 	
-	//start using OpenGL program object
 	glUseProgram(gShaderProgramObject);
 	
-	if(gbLight==true)
-	{
-		glUniform1i(gLKeyPressedUniform, 1);
-		glUniform3fv(gLaUniform, 1, lightAmbient);
-		glUniform3fv(gLdUniform, 1, lightDiffuse);
-		glUniform3fv(gLsUniform, 1, lightSpecular);
-		glUniform3fv(gLpUniform, 1, lightPosition);
-		
-		glUniform3fv(gKaUniform, 1, materialAmbient);
-		glUniform3fv(gKdUniform, 1, materialDiffuse);
-		glUniform3fv(gKsUniform, 1, materialSpecular);
-		glUniform1f(gKShininessUniform, materialShininess);
-	}else
-	{
-		glUniform1i(gLKeyPressedUniform,0);
-	}
-	
-	//OpenGL drawing
-	//set modelview & modelviewprojection matrices to identity
-	mat4 modelMatrix = mat4::identity();
-	mat4 viewMatrix = mat4::identity();
-	
-	//translate
-	modelMatrix = translate(0.0f,0.0f,-3.0f);
-	
-	//pass the above modelViewProjectionMatrix to the vertex shader in 'u_mvp_matrix' shader variable
-	//whose position value we already calculated in initWithFrame() by using glGetUniformLocation()
-	glUniformMatrix4fv(gModelMatrixUniform, 1, GL_FALSE, modelMatrix);
-	glUniformMatrix4fv(gViewMatrixUniform, 1, GL_FALSE, viewMatrix);
-	glUniformMatrix4fv(gProjectionMatrixUniform, 1, GL_FALSE, gPerspectiveProjectionMatrix);
-	
-	// *** bind vao ***
-    glBindVertexArray(gVao_sphere);
+	// Drawing
+	mat4 modelViewMatrix = mat4::identity();
+	mat4 modelViewProjectionMatrix = mat4::identity();
 
-    // *** draw, either by glDrawTriangles() or glDrawArrays() or glDrawElements()
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gVbo_sphere_element);
-    glDrawElements(GL_TRIANGLES, gNumElements, GL_UNSIGNED_SHORT, 0);
+	modelViewMatrix = vmath::translate(-0.5f, 0.0f, -5.0f);
+	modelViewProjectionMatrix = gPerspectiveProjectionMatrix * modelViewMatrix;
 
-    // *** unbind vao ***
-    glBindVertexArray(0);
+	glUniformMatrix4fv(gMVPUniform, 1, GL_FALSE, modelViewProjectionMatrix);
+
+	glBindVertexArray(gVao_StraightBoard);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture_checkerBoard);
+	glUniform1i(gTexture_sampler_uniform, 0);
+
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	glBindVertexArray(0);
+
+	//  Drawing
+	modelViewMatrix = mat4::identity();
+	modelViewProjectionMatrix = mat4::identity();
+	modelViewMatrix = vmath::translate(0.5f, 0.0f, -6.0f);
+	modelViewProjectionMatrix = gPerspectiveProjectionMatrix * modelViewMatrix;
+
+	glUniformMatrix4fv(gMVPUniform, 1, GL_FALSE, modelViewProjectionMatrix);
+
+	glBindVertexArray(gVao_TiltedBoard);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture_checkerBoard);
+	glUniform1i(gTexture_sampler_uniform, 0);
+
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	glBindVertexArray(0);
 	
 	//stop using OpenGL program object
 	glUseProgram(0);
@@ -658,7 +632,6 @@ void resize(int width,int height){
 	gPerspectiveProjectionMatrix = perspective(45.0f, (GLfloat)width/(GLfloat)height, 0.1f,100.0f);
 }
 
-
 void uninitialize(){
 	if(gbFullScreen == true){
 		dwStyle = GetWindowLong(ghwnd, GWL_STYLE);
@@ -668,30 +641,34 @@ void uninitialize(){
 		ShowCursor(TRUE);
 	}
 	
-	//destroy vao
-	if(gVao_sphere)
+	if (gVao_StraightBoard)
 	{
-		glDeleteVertexArrays(1, &gVao_sphere);
-		gVao_sphere = 0;
+		glDeleteVertexArrays(1, &gVao_StraightBoard);
+		gVao_StraightBoard = 0;
 	}
-	
-	//destroy vbo
-	if(gVbo_sphere_position)
+
+	if (gVao_TiltedBoard)
 	{
-		glDeleteBuffers(1, &gVbo_sphere_position);
-		gVbo_sphere_position = 0;
+		glDeleteVertexArrays(1, &gVao_TiltedBoard);
+		gVao_TiltedBoard = 0;
 	}
-	
-	if(gVbo_sphere_normal)
+
+	if (gVbo_StraightBoard_Position)
 	{
-		glDeleteBuffers(1, &gVbo_sphere_normal);
-		gVbo_sphere_normal = 0;
+		glDeleteBuffers(1, &gVbo_StraightBoard_Position);
+		gVbo_StraightBoard_Position = 0;
 	}
-	
-	if(gVbo_sphere_element)
+
+	if (gVbo_TiltedBoard_Position)
 	{
-		glDeleteBuffers(1, &gVbo_sphere_element);
-		gVbo_sphere_element = 0;
+		glDeleteBuffers(1, &gVbo_TiltedBoard_Position);
+		gVbo_TiltedBoard_Position = 0;
+	}
+
+	if (gVbo_CheckerBoard_Texture)
+	{
+		glDeleteBuffers(1, &gVbo_CheckerBoard_Texture);
+		gVbo_CheckerBoard_Texture = 0;
 	}
 	
 	//detach vertex shader from shader program object
