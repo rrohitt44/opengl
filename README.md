@@ -1,10 +1,10 @@
 <html>
 <body>
 <h1>WebGL Demos</h1>
-<table border=1 width=100%>
+<table border="1" width="100%">
 <tbody>
 <tr>
-<td width=30%>
+<td width="30%">
  <a target="iframe_a" href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_01_Canvas_25032018/canvas.html"><span>Plain Canvas</span></a><br>
  <a target="iframe_a" href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_02_Events_25032018/canvas.html"><span>Plain Canvas with Events</span></a><br>
  <a target="_blank"  href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_03_FullScreen_25032018/canvas.html"><span>Canvas with fullscreen</span></a><br>
@@ -18,7 +18,7 @@
  <a target="iframe_a" href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_11_Persp_Anim_Colored_3D_Geometry_15042018/canvas.html"><span>Animated 3D Geometry</span></a><br>
  </td>
  <td>
- <iframe src="canvas.html" name="iframe_a" height="700" width="900"></iframe>
+ <iframe src="canvas.html" name="iframe_a" height="650" width="850"></iframe>
  </td>
  </tr>
  </tbody>
