@@ -2,7 +2,7 @@
 <html>
 <body>
 <h1>WebGL Demos</h1>
- <a href="/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_01_Canvas_25032018/canvas.html"><span>Plain Canvas</span></a><br>
+ <a href="https://github.com/rrohitt44/webgl/blob/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_01_Canvas_25032018/canvas.html"><span>Plain Canvas</span></a><br>
  <a href="/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_02_Events_25032018/canvas.html"><span>Plain Canvas with Events</span></a><br>
  <a href="/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_03_FullScreen_25032018/canvas.html"><span>Canvas with fullscreen</span></a><br>
  <a href="/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_04_BlueScreen_07042018/canvas.html"><span>Blue Screen</span></a><br>
