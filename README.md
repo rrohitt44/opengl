@@ -1,5 +1,5 @@
 <html>
-<body>
+<body width="100%">
 <h1>WebGL Demos</h1>
 <table border="1" width="100%">
 <tbody>
@@ -18,7 +18,7 @@
  <a target="iframe_a" href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_11_Persp_Anim_Colored_3D_Geometry_15042018/canvas.html"><span>Animated 3D Geometry</span></a><br>
  </td>
  <td width="70%" align="center">
- <iframe src="canvas.html" name="iframe_a" height="650" width="850"></iframe>
+ <iframe src="canvas.html" name="iframe_a" height="650" width="850" allowfullscreen></iframe>
  </td>
  </tr>
  </tbody>
