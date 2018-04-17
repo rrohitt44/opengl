@@ -10,8 +10,7 @@
  <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_07_Persp_Colored_Tri_15042018/canvas.html"><span>Colored Triangle</span></a><br>
  <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_08_Persp_2D_Geometry_15042018/canvas.html"><span>Plain 2D Geometry</span></a><br>
  <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_09_Persp_Colored_2D_Geometry_15042018/canvas.html"><span>Colored 2D Geometry</span></a><br>
- <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_09_Persp_Colored_2D_Geometry_15042018/canvas.html"><span>Animated 2D Geometry</span></a><br>
- <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_10_Persp_Anim_Colored_2D_Geometry_15042018/canvas.html"><span>Animated 3D Geometry</span></a><br>
- <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments1/WebGL/Windows/Chrome/WebGL_PP_11_Persp_Anim_Colored_3D_Geometry_15042018/canvas.html"><span>Link Not Working</span></a><br>
+ <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_10_Persp_Anim_Colored_2D_Geometry_15042018/canvas.html"><span>Animated 2D Geometry</span></a><br>
+ <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_11_Persp_Anim_Colored_3D_Geometry_15042018/canvas.html"><span>Animated 3D Geometry</span></a><br>
 </body>
 </html>
