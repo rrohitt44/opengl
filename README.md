@@ -17,7 +17,7 @@
  <a target="iframe_a" href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_10_Persp_Anim_Colored_2D_Geometry_15042018/canvas.html"><span>Animated 2D Geometry</span></a><br>
  <a target="iframe_a" href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_11_Persp_Anim_Colored_3D_Geometry_15042018/canvas.html"><span>Animated 3D Geometry</span></a><br>
  </td>
- <td>
+ <td width="70%">
  <iframe src="canvas.html" name="iframe_a" height="650" width="850"></iframe>
  </td>
  </tr>
