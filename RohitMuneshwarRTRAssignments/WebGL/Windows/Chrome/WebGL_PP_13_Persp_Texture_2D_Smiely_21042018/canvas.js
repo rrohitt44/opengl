@@ -175,6 +175,7 @@ function init()
 	//load smiley texture
 	gSmiley_texture = gl.createTexture();
 	gSmiley_texture.image = new Image();
+	gSmiley_texture.imagecrossorigin="anonymous";
 	gSmiley_texture.image.src = "smiley.png";
 	gSmiley_texture.image.onload = function()
 	{
