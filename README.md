@@ -27,7 +27,7 @@
  <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_18_Persp_Light_Sphere_Per_Fragment_21042018/canvas.html"><span>Lights: Per Fragment - Sphere</span></a><br>
  <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_19_Persp_Light_Sphere_Per_VertexAndFragment_21042018/canvas.html"><span>Lights: Per Vertex/Fragment - Sphere</span></a><br>
  <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_20_Persp_3Lights_Sphere_Per_VertexAndFragment_21042018/canvas.html"><span>Lights: 3 Lights On Sphere</span></a><br>
- <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_21_Persp_Light_2RotLights_Pyramid_Per_Vertex_21042018/canvas.html"><span>Lights: 3 Lights On Pyramid</span></a><br>
+ <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_21_Persp_Light_2RotLights_Pyramid_Per_Vertex_21042018/canvas.html"><span>Lights: 2 Lights On Pyramid</span></a><br>
  <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_PP_22_Persp_Light_Materials_Per_Fragment_21042018/canvas.html"><span>Materials</span></a><br>
 </td>
 </tr>
