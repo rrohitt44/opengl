@@ -201,6 +201,7 @@ function init()
 	//load pyramid texture
 	gPyramid_texture = gl.createTexture();
 	gPyramid_texture.image = new Image();
+	gPyramid_texture.image.crossorigin = "anonymous";
 	gPyramid_texture.image.src = "stone.png";
 	gPyramid_texture.image.onload = function()
 	{
@@ -215,6 +216,7 @@ function init()
 	//load cube texture
 	gCube_texture = gl.createTexture();
 	gCube_texture.image = new Image();
+	gCube_texture.image.crossorigin = "anonymous";
 	gCube_texture.image.src = "Vijay_Kundali.png";
 	gCube_texture.image.onload = function()
 	{
