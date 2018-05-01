@@ -1,7 +1,7 @@
 <html>
 <body width="100%">
 <h1>WebGL Demos</h1>
-<table border="1" width="100%">
+<table width="100%">
 <tbody>
 <tr>
 <td width="40%">
