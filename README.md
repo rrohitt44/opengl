@@ -4,7 +4,7 @@
 <table border="1" width="100%">
 <tbody>
 <tr>
-<td width="30%">
+<td width="40%">
 <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_01_Canvas_25032018/canvas.html"><span>Plain Canvas</span></a><br>
  <a href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_02_Events_25032018/canvas.html"><span>Plain Canvas with Events</span></a><br>
  <a target="_blank"  href="https://rawgit.com/rrohitt44/webgl/master/RohitMuneshwarRTRAssignments/WebGL/Windows/Chrome/WebGL_03_FullScreen_25032018/canvas.html"><span>Canvas with fullscreen</span></a><br>
