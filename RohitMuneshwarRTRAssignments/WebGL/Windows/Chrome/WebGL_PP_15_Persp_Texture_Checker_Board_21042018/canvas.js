@@ -33,20 +33,23 @@ var vertexShaderObject;
 var fragmentShaderObject;
 var shaderProgramObject;
 
-var vao_pyramid;
-var vbo_pyramid_position;
-var vbo_pyramid_color;
 
-var vao_cube;
-var vbo_cube_position;
-var vbo_cube_color;
+var gVao_StraightBoard;
+var gVbo_StraightBoard_Position;
+var gVbo_StraightBoard_Texture;
+
+var gVao_TiltedBoard;
+var gVbo_TiltedBoard_Position
 
 var mvpUniform;
 
 var gPerspectiveProjectionMatrix;
 
-var angleTriangle=0.0;
-var angleSquare=0.0;
+
+var gTexture_sampler_uniform;
+
+var gChecker_board_texture=0;
+var gNumKeyPressed=0;
 
 //onload function
 function main()
@@ -80,25 +83,7 @@ function main()
 	draw();
 }
 
-function updateAngle(){
-	if(angleTriangle>=360.0)
-	{
-		angleTriangle=0.0;
-	}
 
-	if(angleSquare>=360.0)
-	{
-		angleSquare=0.0;
-	}	
-	
-	angleTriangle=angleTriangle+0.7;
-	angleSquare=angleSquare+0.7;
-}
-
-function degToRad(degrees)
-{
-	return (degrees * Math.PI/180.0);
-}
 
 function init()
 {
@@ -122,13 +107,13 @@ function init()
 	"#version 300 es"+
 	"\n"+
 	"in vec4 vPosition;"+
-	"in vec4 vColor;"+
+	"in vec2 vTexture0_chords;"+
 	"uniform mat4 u_mvp_matrix;"+
-	"out vec4 out_color;"+
+	"out vec2 out_texture0_chords;"+
 	"void main(void)"+
 	"{"+
 	"gl_Position=u_mvp_matrix * vPosition;"+
-	"out_color=vColor;"+
+	"out_texture0_chords=vTexture0_chords;"+
 	"}";
 	
 	vertexShaderObject=gl.createShader(gl.VERTEX_SHADER);
@@ -149,11 +134,12 @@ function init()
 	"#version 300 es"+
 	"\n"+
 	"precision highp float;"+
-	"in vec4 out_color;"+
+	"in vec2 out_texture0_chords;"+
+	"uniform sampler2D u_texture0_sampler;"+
 	"out vec4 FragColor;"+
 	"void main(void)"+
 	"{"+
-	"FragColor = out_color;"+
+	"FragColor = texture(u_texture0_sampler, out_texture0_chords);"+
 	"}";
 	fragmentShaderObject=gl.createShader(gl.FRAGMENT_SHADER);
 	gl.shaderSource(fragmentShaderObject, fragmentShaderSourceCode);
@@ -175,7 +161,7 @@ function init()
 	
 	//pre-link binding of shader program object with vertex shader attributes
 	gl.bindAttribLocation(shaderProgramObject, WebGLMacros.VDG_ATTRIBUTE_VERTEX,"vPosition");
-	gl.bindAttribLocation(shaderProgramObject, WebGLMacros.VDG_ATTRIBUTE_COLOR,"vColor");
+	gl.bindAttribLocation(shaderProgramObject, WebGLMacros.VDG_ATTRIBUTE_TEXTURE0,"vTexture0_chords");
 	
 	//linking
 	gl.linkProgram(shaderProgramObject);
@@ -189,133 +175,73 @@ function init()
 		}
 	}
 	
+	
+	//load checker board texture
+	gChecker_board_texture = gl.createTexture();
+	
+		gl.bindTexture(gl.TEXTURE_2D, gChecker_board_texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		
+		var c = 0;
+		var checkImage = [];
+		for(var i =0;i<64;i++){
+			for(var j =0; j<64;j++){
+				for (var k =0 ;k< 4;k++){
+					c = ((i & 0x8) ^ (j & 0x8))*255;
+					checkImage[(i*64+j)*4]= c;
+					checkImage[(i*64+j)*4+1]= c;
+					checkImage[(i*64+j)*4+2]= c;
+					checkImage[(i*64+j)*4+3]= 0xff;
+				}
+			}
+		} 
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,64,64,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(checkImage));
+		//gl.texEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.REPLACE);
+		
+		gl.bindTexture(gl.TEXTURE_2D, null);
+	
+	
+	
 	//get MVP uniform location
 	mvpUniform=gl.getUniformLocation(shaderProgramObject,"u_mvp_matrix");
-	
+	gTexture_sampler_uniform = gl.getUniformLocation(shaderProgramObject, "u_texture0_sampler");
 	// *** vertices, colors, shader attribs, vbo, vao initialization ***
-	var pyramidVertices=new Float32Array(
+	var straightFacingQuadVertices=new Float32Array(
 									[
-								  0.0, 1.0, 0.0,    // front-top
-								  -1.0, -1.0, 1.0,  // front-left
-								  1.0, -1.0, 1.0,   // front-right
-								  
-								  0.0, 1.0, 0.0,    // right-top
-								  1.0, -1.0, 1.0,   // right-left
-								  1.0, -1.0, -1.0,  // right-right
-								  
-								  0.0, 1.0, 0.0,    // back-top
-								  1.0, -1.0, -1.0,  // back-left
-								  -1.0, -1.0, -1.0, // back-right
-								  
-								  0.0, 1.0, 0.0,    // left-top
-								  -1.0, -1.0, -1.0, // left-left
-								  -1.0, -1.0, 1.0   // left-right
+								 -2.0,-1.0,0.0,
+		-2.0,1.0,0.0,
+		0.0,1.0,0.0,
+		0.0,-1.0,0.0
 									]
 									);
 		
-	var pyramidColor=new Float32Array(
-							[
-							1, 0, 0,
-							0, 1, 0,
-							0, 0, 1,
+	var checkerBoardTexcoords =new Float32Array(
+	[
+		0.0, 0.0,
+		0.0,1.0,
+		1.0,1.0,
+		1.0,0.0
+	]);
 
-							1, 0, 0,
-							0, 0, 1,
-							0, 1, 0,
-
-							1, 0, 0,
-							0, 1, 0,
-							0, 0, 1,
-
-							1, 0, 0,
-							0, 0, 1,
-							0, 1, 0
-							]
-							);
-									
-									
-	var cubeVertices=new Float32Array(
-									[
-									 // top surface
-                                       1.0, 1.0,-1.0,  // top-right of top
-                                       -1.0, 1.0,-1.0, // top-left of top
-                                       -1.0, 1.0, 1.0, // bottom-left of top
-                                       1.0, 1.0, 1.0,  // bottom-right of top
-                                       
-                                       // bottom surface
-                                       1.0,-1.0, 1.0,  // top-right of bottom
-                                       -1.0,-1.0, 1.0, // top-left of bottom
-                                       -1.0,-1.0,-1.0, // bottom-left of bottom
-                                       1.0,-1.0,-1.0,  // bottom-right of bottom
-                                       
-                                       // front surface
-                                       1.0, 1.0, 1.0,  // top-right of front
-                                       -1.0, 1.0, 1.0, // top-left of front
-                                       -1.0,-1.0, 1.0, // bottom-left of front
-                                       1.0,-1.0, 1.0,  // bottom-right of front
-                                       
-                                       // back surface
-                                       1.0,-1.0,-1.0,  // top-right of back
-                                       -1.0,-1.0,-1.0, // top-left of back
-                                       -1.0, 1.0,-1.0, // bottom-left of back
-                                       1.0, 1.0,-1.0,  // bottom-right of back
-                                       
-                                       // left surface
-                                       -1.0, 1.0, 1.0, // top-right of left
-                                       -1.0, 1.0,-1.0, // top-left of left
-                                       -1.0,-1.0,-1.0, // bottom-left of left
-                                       -1.0,-1.0, 1.0, // bottom-right of left
-                                       
-                                       // right surface
-                                       1.0, 1.0,-1.0,  // top-right of right
-                                       1.0, 1.0, 1.0,  // top-left of right
-                                       1.0,-1.0, 1.0,  // bottom-left of right
-                                       1.0,-1.0,-1.0,  // bottom-right of right
-									]
-									);
-									
-	var cubeColor=new Float32Array(
-									[
-									0.0, 1.0, 0.0,
-									0.0, 1.0, 0.0,
-									0.0, 1.0, 0.0,
-									0.0, 1.0, 0.0,
-
-									1.0, 0.5, 0.0,
-									1.0, 0.5, 0.0,
-									1.0, 0.5, 0.0,
-									1.0, 0.5, 0.0,
-
-									1.0, 0.0, 0.0,
-									1.0, 0.0, 0.0,
-									1.0, 0.0, 0.0,
-									1.0, 0.0, 0.0,
-
-									1.0, 1.0, 0.0,
-									1.0, 1.0, 0.0,
-									1.0, 1.0, 0.0,
-									1.0, 1.0, 0.0,
-
-									0.0, 0.0, 1.0,
-									0.0, 0.0, 1.0,
-									0.0, 0.0, 1.0,
-									0.0, 0.0, 1.0,
-
-									1.0, 0.0, 1.0,
-									1.0, 0.0, 1.0,
-									1.0, 0.0, 1.0,
-									1.0, 0.0, 1.0
-									]
-									);
+	var tiltedFacingQuadVertices = new Float32Array([
+        1.0,-1.0,0.0,
+        1.0,1.0,0.0,
+        2.41421,1.0,-1.41421,
+        2.41421,-1.0,-1.41421
+   ] );
 	
 	//triangle vao
-	vao_pyramid=gl.createVertexArray();
-	gl.bindVertexArray(vao_pyramid);
+	gVao_StraightBoard=gl.createVertexArray();
+	gl.bindVertexArray(gVao_StraightBoard);
 	
 	//triangle position
-	vbo_pyramid_position=gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, vbo_pyramid_position);
-	gl.bufferData(gl.ARRAY_BUFFER, pyramidVertices, gl.STATIC_DRAW);
+	gVbo_StraightBoard_Position=gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, gVbo_StraightBoard_Position);
+	gl.bufferData(gl.ARRAY_BUFFER, straightFacingQuadVertices, gl.STATIC_DRAW);
 	gl.vertexAttribPointer(WebGLMacros.VDG_ATTRIBUTE_VERTEX,3, //3 is for X, Y, Z co-ordinates in out pyramidVertices array
 															gl.FLOAT,
 															false, 0,0);
@@ -323,51 +249,50 @@ function init()
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	
 	//triangle color
-	vbo_pyramid_color=gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, vbo_pyramid_color);
-	gl.bufferData(gl.ARRAY_BUFFER, pyramidColor, gl.STATIC_DRAW);
-	gl.vertexAttribPointer(WebGLMacros.VDG_ATTRIBUTE_COLOR, 3, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(WebGLMacros.VDG_ATTRIBUTE_COLOR);
+	gVbo_StraightBoard_Texture=gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, gVbo_StraightBoard_Texture);
+	gl.bufferData(gl.ARRAY_BUFFER, checkerBoardTexcoords, gl.STATIC_DRAW);
+	gl.vertexAttribPointer(WebGLMacros.VDG_ATTRIBUTE_TEXTURE0, 2, gl.FLOAT, false, 0, null);
+	gl.enableVertexAttribArray(WebGLMacros.VDG_ATTRIBUTE_TEXTURE0);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
-	
 	
 	gl.bindVertexArray(null);
 	
-	//square vao
-	vao_cube=gl.createVertexArray();
-	gl.bindVertexArray(vao_cube);
 	
-	//vbo square
-	vbo_cube_position=gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER,vbo_cube_position);
-	gl.bufferData(gl.ARRAY_BUFFER, cubeVertices, gl.STATIC_DRAW);
-	gl.vertexAttribPointer(WebGLMacros.VDG_ATTRIBUTE_VERTEX, 3, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(WebGLMacros.VDG_ATTRIBUTE_VERTEX);
-	gl.bindBuffer(gl.ARRAY_BUFFER, null);
-	
-	
-	//square color
-	vbo_cube_color=gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, vbo_cube_color);
-	gl.bufferData(gl.ARRAY_BUFFER, cubeColor, gl.STATIC_DRAW);
-	gl.vertexAttribPointer(WebGLMacros.VDG_ATTRIBUTE_COLOR, 3, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(WebGLMacros.VDG_ATTRIBUTE_COLOR);
-	gl.bindBuffer(gl.ARRAY_BUFFER, null);
-	
-	
-	gl.bindVertexArray(null);
+	 gVao_TiltedBoard = gl.createVertexArray();
+    gl.bindVertexArray(gVao_TiltedBoard);
+    //position
+    gVbo_TiltedBoard_Position = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,gVbo_TiltedBoard_Position);
+    gl.bufferData(gl.ARRAY_BUFFER,tiltedFacingQuadVertices,gl.STATIC_DRAW);
+    gl.vertexAttribPointer(WebGLMacros.VDG_ATTRIBUTE_VERTEX,3,gl.FLOAT,false,0,0);
+    gl.enableVertexAttribArray(WebGLMacros.VDG_ATTRIBUTE_VERTEX);
+    gl.bindBuffer(gl.ARRAY_BUFFER,null);
+   //vbo texture
+    gVbo_Texture = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,gVbo_Texture)
+    gl.bufferData(gl.ARRAY_BUFFER,checkerBoardTexcoords,gl.STATIC_DRAW);
+    gl.vertexAttribPointer(WebGLMacros.VDG_ATTRIBUTE_TEXTURE0,2,gl.FLOAT,false,0,0); // 2 for S and T in tex cord
+    gl.enableVertexAttribArray(WebGLMacros.VDG_ATTRIBUTE_TEXTURE0);
+    gl.bindBuffer(gl.ARRAY_BUFFER,null)
+    
+    //gl.vertexAttrib3f(WebGLMacros.SAM_ATTRIBUTE_COLOR,0.5,0.5,1.0);
+    gl.bindVertexArray(null);
 	
 	//set clear color
     //gl.shadeModel(gl.SMOOTH);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
-    gl.enable(gl.CULL_FACE);
+   // gl.enable(gl.CULL_FACE);
     gl.depthFunc(gl.LEQUAL);
-	gl.clearColor(0.0 , 0.0 , 0.0 , 1.0);
+	
+	gl.enable(gl.TEXTURE_2D);
+	gl.clearColor(0.2 , 0.3 , 0.3 , 1.0);
 	
 	//initialize projection matrix
 	gPerspectiveProjectionMatrix=mat4.create();
 }
+
 
 function resize()
 {
@@ -395,47 +320,54 @@ function draw()
 	
 	gl.useProgram(shaderProgramObject);
 	
-	//triangle draw
+	//straight draw
 	var modelViewMatrix=mat4.create();
 	var modelViewProjectionMatrix=mat4.create();
-	var rotateMatrix=mat4.create();
 	
-	mat4.translate(modelViewMatrix, modelViewMatrix, [-1.5, 0.0, -6.0]);
-	mat4.rotateY(rotateMatrix, modelViewMatrix, degToRad(angleTriangle));
-	mat4.multiply(modelViewProjectionMatrix, gPerspectiveProjectionMatrix, rotateMatrix);
+	mat4.translate(modelViewMatrix, modelViewMatrix, [-0.5, 0.0, -5.0]);
+	mat4.multiply(modelViewProjectionMatrix, gPerspectiveProjectionMatrix, modelViewMatrix);
 	
 	gl.uniformMatrix4fv(mvpUniform, false, modelViewProjectionMatrix);
 	
-	gl.bindVertexArray(vao_pyramid);
 	
-	gl.drawArrays(gl.TRIANGLES, 0, 12);
+						
+	gl.bindVertexArray(gVao_StraightBoard);
+	
+	gl.bindTexture(gl.TEXTURE_2D, gChecker_board_texture);
+	gl.uniform1i(gTexture_sampler_uniform, 0);
+	
+	
+	
+	gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 	
 	gl.bindVertexArray(null);
 	
 	
-	//square draw
+	
 	modelViewMatrix=mat4.create();
 	modelViewProjectionMatrix=mat4.create();
-	rotateMatrix=mat4.create();
-	mat4.translate(modelViewMatrix, modelViewMatrix, [1.5, 0.0, -7.0]);
-	mat4.rotateX(rotateMatrix, modelViewMatrix, degToRad(angleSquare));
-	mat4.rotateY(rotateMatrix, rotateMatrix, degToRad(angleSquare));
-	mat4.rotateZ(rotateMatrix, rotateMatrix, degToRad(angleSquare));
-	mat4.multiply(modelViewProjectionMatrix, gPerspectiveProjectionMatrix, rotateMatrix);
+	
+	mat4.translate(modelViewMatrix, modelViewMatrix, [0.5, 0.0, -5.0]);
+	mat4.multiply(modelViewProjectionMatrix, gPerspectiveProjectionMatrix, modelViewMatrix);
+	
 	gl.uniformMatrix4fv(mvpUniform, false, modelViewProjectionMatrix);
-	gl.bindVertexArray(vao_cube);
+	
+	
+						
+	gl.bindVertexArray(gVao_TiltedBoard);
+	
+	gl.bindTexture(gl.TEXTURE_2D, gChecker_board_texture);
+	gl.uniform1i(gTexture_sampler_uniform, 0);
+	
+	
+	
 	gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
-	gl.drawArrays(gl.TRIANGLE_FAN, 4, 4);
-	gl.drawArrays(gl.TRIANGLE_FAN, 8, 4);
-	gl.drawArrays(gl.TRIANGLE_FAN, 12, 4);
-	gl.drawArrays(gl.TRIANGLE_FAN, 16, 4);
-	gl.drawArrays(gl.TRIANGLE_FAN, 20, 4);
+	
 	gl.bindVertexArray(null);
 	
 	gl.useProgram(null);
 	
-	//animation loop
-	updateAngle();
+	
 	requestAnimationFrame(draw, canvas);
 }
 
@@ -454,8 +386,24 @@ function keyDown(event)
 			toggleFullScreen();
 			
 			//repait
-			drawText("Hello WebGL !!!");
+			//drawText("Hello WebGL !!!");
 			break;
+		//case 31: //1  
+		case 49: //1  
+			gNumKeyPressed=1;
+		break;
+		//case 32: //2  
+		case 50: //2
+			gNumKeyPressed=2;
+		break;
+		//case 33: //3
+		case 51: //3  				
+			gNumKeyPressed=3;
+		break;
+		//case 34: //4
+		case 52: //4
+			gNumKeyPressed=4;
+		break;
 	}
 }
 
@@ -512,41 +460,30 @@ function toggleFullScreen()
 function uninitialize()
 {
 	//code
-	if(vao_pyramid)
+	if(gChecker_board_texture)
+    {
+        gl.deleteTexture(gChecker_board_texture);
+        gChecker_board_texture=0;
+    }
+    
+	if(gVao_StraightBoard)
 	{
-		gl.deleteVertexArray(vao_pyramid);
-		vao_pyramid=null;
+		gl.deleteVertexArray(gVao_StraightBoard);
+		gVao_StraightBoard=null;
 	}
 	
-	if(vbo_pyramid_position)
+	if(gVbo_StraightBoard_Position)
 	{
-		gl.deleteBuffer(vbo_pyramid_position);
-		vbo_pyramid_position=null;
+		gl.deleteBuffer(gVbo_StraightBoard_Position);
+		gVbo_StraightBoard_Position=null;
 	}
 	
-	if(vbo_pyramid_color)
+	if(gVbo_StraightBoard_Texture)
 	{
-		gl.deleteBuffer(vbo_pyramid_color);
-		vbo_pyramid_color=null;
+		gl.deleteBuffer(gVbo_StraightBoard_Texture);
+		gVbo_StraightBoard_Texture=null;
 	}
 	
-	if(vao_cube)
-	{
-		gl.deleteVertexArray(vao_cube);
-		vao_cube=null;
-	}
-	
-	if(vbo_cube_position)
-	{
-		gl.deleteBuffer(vbo_cube_position);
-		vbo_cube_position=null;
-	}
-	
-	if(vbo_cube_color)
-	{
-		gl.deleteBuffer(vbo_cube_color);
-		vbo_cube_color=null;
-	}
 	
 	
 	if(shaderProgramObject)
